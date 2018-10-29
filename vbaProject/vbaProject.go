@@ -19,6 +19,7 @@ type VBAProject struct {
 	cf *compoundFile.CompoundFile
 
 	Module []*ModuleInfo
+	dic    map[string]int // 记录模块名称的下标
 }
 
 func init() {
@@ -27,6 +28,8 @@ func init() {
 func New() *VBAProject {
 	return new(VBAProject)
 }
+
+// 解析
 func (me *VBAProject) Parse(b []byte) (err error) {
 	if me.cf, err = compoundFile.NewCompoundFile(b); err != nil {
 		return
@@ -42,7 +45,7 @@ func (me *VBAProject) Parse(b []byte) (err error) {
 	return
 }
 
-// 获取所有模块的名称
+// 获取所有模块的信息
 func (me *VBAProject) getModuleInfo() (err error) {
 	var b []byte
 	var strPre string = ""
@@ -65,9 +68,11 @@ func (me *VBAProject) getModuleInfo() (err error) {
 		count := len(mi)
 
 		me.Module = make([]*ModuleInfo, count)
+		me.dic = make(map[string]int)
 		for i := range mi {
 			me.Module[i] = new(ModuleInfo)
 			me.Module[i].Name = mi[i].Name
+			me.dic[me.Module[i].Name] = i
 
 			if mi[i].ModuleType == 33 {
 				// 标准模块
