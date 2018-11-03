@@ -323,19 +323,3 @@ func byte2struct(b []byte, pStruct interface{}) error {
 	buf := bytes.NewBuffer(b)
 	return binary.Read(buf, binary.LittleEndian, pStruct)
 }
-
-// 修改符合文档的某个流
-func (me *CompoundFile) Modify(streamName string, newByte []byte) (err error) {
-
-	//	// b2保持大小不变，方便复制到filebyte
-	//	b2 := make([]byte, len(oldBbyte))
-	//	copy(b2, newB)
-	//	// 修改替换后的文件byte
-	//	for i, v := range me.cfs.arrStream[streamIndex].address {
-	//		bStart := int32(i) * me.cfs.arrStream[streamIndex].step
-	//		bEnd := bStart + me.cfs.arrStream[streamIndex].step
-	//		copy(me.cfs.fileByte[v:], b2[bStart:bEnd])
-	//	}
-
-	return nil
-}
