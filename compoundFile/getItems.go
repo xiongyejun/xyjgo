@@ -12,21 +12,16 @@ import (
 	"github.com/xiongyejun/xyjgo/colorPrint"
 )
 
-//func (me *CompoundFile) GetStorage(StorageName string) (s *Storage, err error) {
-//	return nil, nil
-//}
-// [6]DataSpaces\DataSpaceInfo\streamName
-
+// 获取cfStream的byte
 func (me *CompoundFile) GetStream(streamPath string) (b []byte, err error) {
-	var s *Storage = me.Root
 	var arr []string = strings.Split(streamPath, `\`)
-
-	for i := 0; i < len(arr)-1; i++ {
-		if index, ok := s.storageDic[arr[i]]; !ok {
-			return nil, errors.New("不存在的路径，" + arr[i])
-		} else {
-			s = s.Storages[index]
-		}
+	if len(arr) == 1 {
+		return nil, errors.New("不存在的路径:" + streamPath)
+	}
+	storagePath := strings.Join(arr[:len(arr)-1], `\`)
+	var s *Storage
+	if s, err = me.getStorage(storagePath); err != nil {
+		return
 	}
 
 	if index, ok := s.streamDic[arr[len(arr)-1]]; !ok {
@@ -35,6 +30,42 @@ func (me *CompoundFile) GetStream(streamPath string) (b []byte, err error) {
 		// 读取stream是按照512的大小读取的，但最后1个可能没有512
 		return s.Streams[index].stream.Bytes()[:s.streamSize[index]], nil
 	}
+}
+
+// 获取cfStream
+func (me *CompoundFile) getStreamItem(streamPath string) (ret *cfStream, err error) {
+	var arr []string = strings.Split(streamPath, `\`)
+	if len(arr) == 1 {
+		return nil, errors.New("不存在的路径:" + streamPath)
+	}
+	storagePath := strings.Join(arr[:len(arr)-1], `\`)
+	var s *Storage
+	if s, err = me.getStorage(storagePath); err != nil {
+		return
+	}
+
+	if index, ok := s.streamDic[arr[len(arr)-1]]; !ok {
+		return nil, errors.New("不存在的Stream名称:" + arr[len(arr)-1])
+	} else {
+		// 读取stream是按照512的大小读取的，但最后1个可能没有512
+		return s.Streams[index], nil
+	}
+}
+
+// 获取Storage
+func (me *CompoundFile) getStorage(storagePath string) (ret *Storage, err error) {
+	var s *Storage = me.Root
+	var arr []string = strings.Split(storagePath, `\`)
+
+	for i := 0; i < len(arr); i++ {
+		if index, ok := s.storageDic[arr[i]]; !ok {
+			return nil, errors.New("不存在的路径:" + arr[i])
+		} else {
+			s = s.Storages[index]
+		}
+	}
+
+	return s, nil
 }
 
 func (me *CompoundFile) PrintOut() {
