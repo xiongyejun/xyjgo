@@ -5,6 +5,7 @@ package vbaProject
 import (
 	"bytes"
 	"errors"
+	"regexp"
 
 	"github.com/axgle/mahonia"
 )
@@ -73,6 +74,27 @@ func (me *VBAProject) checkModuleExists(moduleName string) (index int, err error
 
 // 清除vba工程密码
 func (me *VBAProject) UnProtectProject() (err error) {
+	var bProject []byte
+	if bProject, err = me.cf.GetStream(me.VBA_PROJECT_CUR + `PROJECT`); err != nil {
+		return
+	}
+
+	pattern := `CMG="[A-Z\d]+"\r\n|DPB="[A-Z\d]+"\r\n|GC="[A-Z\d]+"\r\n`
+
+	var bMatch bool
+	if bMatch, err = regexp.Match(pattern, bProject); !bMatch {
+		return
+	}
+
+	var reg *regexp.Regexp
+	if reg, err = regexp.Compile(pattern); err != nil {
+		return
+	}
+	// 替换后的byte
+	newByte := reg.ReplaceAll(bProject, []byte{})
+	if err = me.cf.ModifyStream(me.VBA_PROJECT_CUR+`PROJECT`, newByte); err != nil {
+		return
+	}
 
 	return
 }
