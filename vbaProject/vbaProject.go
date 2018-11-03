@@ -9,14 +9,21 @@ import (
 	"github.com/xiongyejun/xyjgo/vbaDir"
 )
 
+const (
+	PROCEDURAL_MODULE int = 0x21
+	CLASS_MODULE      int = 0x22
+)
+
 type ModuleInfo struct {
-	Type string // ".bas" ".cls"
+	Type int // '0x0021  procedural module
+	// '0x0022 document module, class module, or designer module
 	Name string
 	Code []byte // vba代码是gbk编码，在go里要显示的话，需要转换到utf8
 }
 
 type VBAProject struct {
-	cf *compoundFile.CompoundFile
+	cf              *compoundFile.CompoundFile
+	VBA_PROJECT_CUR string // 03版本的是放在_VBA_PROJECT_CUR\目录之下，07版本的设置为空
 
 	Module []*ModuleInfo
 	dic    map[string]int // 记录模块名称的下标
@@ -48,14 +55,14 @@ func (me *VBAProject) Parse(b []byte) (err error) {
 // 获取所有模块的信息
 func (me *VBAProject) getModuleInfo() (err error) {
 	var b []byte
-	var strPre string = ""
 
+	me.VBA_PROJECT_CUR = ""
 	if b, err = me.cf.GetStream(`VBA\dir`); err != nil {
 		// 03版本的是放在_VBA_PROJECT_CUR\目录之下
 		if b, err = me.cf.GetStream(`_VBA_PROJECT_CUR\VBA\dir`); err != nil {
 			return errors.New("没有找到dir流。")
 		} else {
-			strPre = `_VBA_PROJECT_CUR\`
+			me.VBA_PROJECT_CUR = `_VBA_PROJECT_CUR\`
 		}
 	}
 	// 解压缩dir流
@@ -73,15 +80,10 @@ func (me *VBAProject) getModuleInfo() (err error) {
 			me.Module[i] = new(ModuleInfo)
 			me.Module[i].Name = mi[i].Name
 			me.dic[me.Module[i].Name] = i
+			me.Module[i].Type = int(mi[i].ModuleType)
 
-			if mi[i].ModuleType == 33 {
-				// 标准模块
-				me.Module[i].Type = ".bas"
-			} else {
-				me.Module[i].Type = ".cls"
-			}
 			// 解压模块代码
-			if b, err = me.cf.GetStream(strPre + `VBA\` + me.Module[i].Name); err != nil {
+			if b, err = me.cf.GetStream(me.VBA_PROJECT_CUR + `VBA\` + me.Module[i].Name); err != nil {
 				return
 			}
 			rle = rleVBA.NewRLE(b[mi[i].TextOffset:])
