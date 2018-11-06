@@ -16,10 +16,10 @@ type iOffice interface {
 	reWriteFile(oldFileName string, saveFileName string, newByte []byte) error
 }
 
-var iof iOffice
 var of *officeFile
 
 type officeFile struct {
+	iof      iOffice
 	fileName string
 	vp       *vbaProject.VBAProject
 
@@ -32,6 +32,7 @@ func (me *file03) readFile(fileName string) (b []byte, err error) {
 	b, err = ioutil.ReadFile(fileName)
 	return
 }
+
 func (me *file03) reWriteFile(oldFileName string, saveFileName string, newByte []byte) (err error) {
 	err = ioutil.WriteFile(saveFileName, newByte, 0666)
 	return

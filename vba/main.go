@@ -36,13 +36,13 @@ func main() {
 			return
 		}
 		if fileHeader.IsZIP(b) {
-			iof = new(file07)
+			of.iof = new(file07)
 		} else {
-			iof = new(file03)
+			of.iof = new(file03)
 		}
 		of.fileName = fileName
 
-		if of.b, err = iof.readFile(of.fileName); err != nil {
+		if of.b, err = of.iof.readFile(of.fileName); err != nil {
 			fmt.Println(err)
 		} else {
 			if err = of.vp.Parse(of.b); err != nil {
@@ -65,6 +65,10 @@ func main() {
 			}
 		}
 	}
+}
+
+func (me *officeFile) HideModule(moduleName string) (err error) {
+	return me.vp.HideModule(moduleName)
 }
 
 func handleCommands(tokens []string) {
@@ -110,6 +114,36 @@ func handleCommands(tokens []string) {
 			}
 		}
 
+	case "hidem":
+		if len(tokens) != 2 {
+			fmt.Println(`输入的命令不正确hidem(ModuleName) -- 隐藏模块`)
+			fmt.Printf("%d, %#v\r\n", len(tokens), tokens)
+			return
+		}
+
+		if err := of.vp.HideModule(tokens[1]); err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Printf("隐藏模块%s成功\r\n", tokens[1])
+			colorPrint.SetColor(colorPrint.White, colorPrint.Red)
+			fmt.Println("退出前请保存文件：save")
+		}
+
+	case "save":
+		var oldFileName string = of.fileName
+		var saveFileName string
+		if len(tokens) == 1 {
+			saveFileName = of.fileName
+		} else {
+			saveFileName = tokens[1]
+		}
+
+		if err := of.iof.reWriteFile(oldFileName, saveFileName, of.b); err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("保存成功。")
+		}
+
 	default:
 		fmt.Println("Unrecognized lib command:", tokens)
 	}
@@ -123,6 +157,8 @@ func printCmd() {
  ls -- 查看模块列表
  show <ModuleName> -- 查看模块代码
  showi <ModuleIndex> -- 查看模块代码
+ hidem(ModuleName) -- 隐藏模块
+ save <[saveFileName]>-- 保存文件
  e或者q -- 退出
  `)
 
