@@ -15,10 +15,11 @@ import (
 // 获取cfStream的byte
 func (me *CompoundFile) GetStream(streamPath string) (b []byte, err error) {
 	var arr []string = strings.Split(streamPath, `\`)
-	if len(arr) == 1 {
-		return nil, errors.New("不存在的路径:" + streamPath)
+	var storagePath string
+	if len(arr) > 1 {
+		storagePath = strings.Join(arr[:len(arr)-1], `\`)
 	}
-	storagePath := strings.Join(arr[:len(arr)-1], `\`)
+
 	var s *Storage
 	if s, err = me.getStorage(storagePath); err != nil {
 		return
@@ -35,10 +36,11 @@ func (me *CompoundFile) GetStream(streamPath string) (b []byte, err error) {
 // 获取cfStream
 func (me *CompoundFile) getStreamItem(streamPath string) (ret *cfStream, err error) {
 	var arr []string = strings.Split(streamPath, `\`)
-	if len(arr) == 1 {
-		return nil, errors.New("不存在的路径:" + streamPath)
+	var storagePath string
+	if len(arr) > 1 {
+		storagePath = strings.Join(arr[:len(arr)-1], `\`)
 	}
-	storagePath := strings.Join(arr[:len(arr)-1], `\`)
+
 	var s *Storage
 	if s, err = me.getStorage(storagePath); err != nil {
 		return
@@ -55,6 +57,9 @@ func (me *CompoundFile) getStreamItem(streamPath string) (ret *cfStream, err err
 // 获取Storage
 func (me *CompoundFile) getStorage(storagePath string) (ret *Storage, err error) {
 	var s *Storage = me.Root
+	if storagePath == "" {
+		return s, nil
+	}
 	var arr []string = strings.Split(storagePath, `\`)
 
 	for i := 0; i < len(arr); i++ {
