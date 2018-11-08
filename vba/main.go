@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -92,6 +93,57 @@ func handleCommands(tokens []string) {
 			fmt.Println(str)
 		}
 
+	case "sm":
+		if len(tokens) != 2 {
+			fmt.Println(`sm <ModuleName> -- 保存模块代码为文件`)
+			fmt.Printf("%d, %#v\r\n", len(tokens), tokens)
+			return
+		}
+
+		moduleName := tokens[1]
+		if index, err := of.vp.GetModuleIndex(moduleName); err != nil {
+			fmt.Println(err)
+		} else {
+			if err := saveModule(index); err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("%d 模块输出成功：%s\r\n", index, moduleName)
+			}
+		}
+
+	case "smi":
+		if len(tokens) != 2 {
+			fmt.Println(`smi <ModuleIndex> -- 保存模块代码为文件`)
+			fmt.Printf("%d, %#v\r\n", len(tokens), tokens)
+			return
+		}
+
+		if index, err := strconv.Atoi(tokens[1]); err != nil {
+			fmt.Println(err)
+		} else {
+			if err := saveModule(index); err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("%d 模块输出成功：%s\r\n", index, of.vp.Module[index].Name)
+			}
+		}
+
+	case "smAll":
+		if len(tokens) != 1 {
+			fmt.Println(`输入的命令不正确smAll -- 保存所有模块代码为文件`)
+			fmt.Printf("%d, %#v\r\n", len(tokens), tokens)
+			return
+		}
+
+		for i := range of.vp.Module {
+			if err := saveModule(i); err != nil {
+				fmt.Println(err)
+				return
+			} else {
+				fmt.Printf("%d 模块输出成功：%s\r\n", i, of.vp.Module[i].Name)
+			}
+		}
+
 	case "showi":
 		if len(tokens) != 2 {
 			fmt.Println(`输入的命令不正确showi <ModuleIndex> -- 查看模块代码`)
@@ -149,6 +201,27 @@ func handleCommands(tokens []string) {
 	}
 }
 
+func saveModule(moduleIndex int) (err error) {
+	var moduleName string = of.vp.Module[moduleIndex].Name
+
+	var str string
+	if str, err = of.vp.GetModuleCode(moduleName); err != nil {
+		return
+	}
+
+	if of.vp.Module[moduleIndex].Type == vbaProject.CLASS_MODULE {
+		moduleName += ".cls"
+	} else {
+		moduleName += ".bas"
+	}
+
+	if err = ioutil.WriteFile(moduleName, []byte(str), 0666); err != nil {
+		return
+	}
+
+	return
+}
+
 func printCmd() {
 	colorPrint.SetColor(colorPrint.Green, colorPrint.Black)
 
@@ -157,8 +230,11 @@ func printCmd() {
  ls -- 查看模块列表
  show <ModuleName> -- 查看模块代码
  showi <ModuleIndex> -- 查看模块代码
+ sm <ModuleName> -- 保存模块代码为文件
+ smi <ModuleIndex> -- 保存模块代码为文件
+ smAll -- 保存所有模块代码为文件
  hidem(ModuleName) -- 隐藏模块
- save <[saveFileName]>-- 保存文件
+ save <[saveAsFileName默认是原文件名]>-- 保存文件
  e或者q -- 退出
  `)
 
