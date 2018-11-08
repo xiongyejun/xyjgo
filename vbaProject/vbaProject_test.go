@@ -22,7 +22,25 @@ import (
 //	}
 //}
 
-//func Test_HideModule(t *testing.T) {
+func Test_HideModule(t *testing.T) {
+	vp := New()
+	if b, err := ioutil.ReadFile("07vbaProject.bin"); err != nil {
+		t.Error(err)
+	} else {
+		if err := vp.Parse(b); err != nil {
+			t.Error(err)
+		} else {
+			if err := vp.HideModule("模块1"); err != nil {
+				t.Error(err)
+			} else {
+				// 改写文件
+				t.Log("ok")
+			}
+		}
+	}
+}
+
+//func Test_UnHideModule(t *testing.T) {
 //	vp := New()
 //	if b, err := ioutil.ReadFile("03.xls"); err != nil {
 //		t.Error(err)
@@ -30,41 +48,19 @@ import (
 //		if err := vp.Parse(b); err != nil {
 //			t.Error(err)
 //		} else {
-//			if err := vp.HideModule("模块1"); err != nil {
+//			if err := vp.UnHideModule("模块1"); err != nil {
 //				t.Error(err)
 //			} else {
 //				// 改写文件
 //				if err := ioutil.WriteFile("03.xls", vp.cf.SrcByte, 0666); err != nil {
 //					t.Error(err)
 //				} else {
-//					t.Log("隐藏成功")
+//					t.Log("取消隐藏成功")
 //				}
 //			}
 //		}
 //	}
 //}
-
-func Test_UnHideModule(t *testing.T) {
-	vp := New()
-	if b, err := ioutil.ReadFile("03.xls"); err != nil {
-		t.Error(err)
-	} else {
-		if err := vp.Parse(b); err != nil {
-			t.Error(err)
-		} else {
-			if err := vp.UnHideModule("模块1"); err != nil {
-				t.Error(err)
-			} else {
-				// 改写文件
-				if err := ioutil.WriteFile("03.xls", vp.cf.SrcByte, 0666); err != nil {
-					t.Error(err)
-				} else {
-					t.Log("取消隐藏成功")
-				}
-			}
-		}
-	}
-}
 
 //func Test_UnProtectProject(t *testing.T) {
 //	vp := New()

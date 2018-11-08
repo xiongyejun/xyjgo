@@ -23,6 +23,11 @@ func (me *VBAProject) GetModuleCode(moduleName string) (ret string, err error) {
 
 }
 
+// 获取模块在VBAProject.Module里的下标
+func (me *VBAProject) GetModuleIndex(moduleName string) (ret int, err error) {
+	return me.checkModuleExists(moduleName)
+}
+
 // 隐藏模块
 func (me *VBAProject) HideModule(moduleName string) (err error) {
 	var index int
