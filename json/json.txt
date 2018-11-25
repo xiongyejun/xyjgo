@@ -1,0 +1,1 @@
+{"type":"ZH_CN2EN","errorCode":0,"elapsedTime":0,"translateResult":[[{"src":"??","tgt":"hello"}]]}
