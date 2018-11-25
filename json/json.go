@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -32,6 +33,10 @@ func main() {
 	if b, err = ioutil.ReadAll(f); err != nil {
 		fmt.Println(err)
 		return
+	}
+
+	if bytes.HasPrefix(b, []byte{0xEF, 0xBB, 0xBF}) {
+		b = b[3:]
 	}
 
 	if err = jsonUnmarshal(b); err != nil {
@@ -124,5 +129,6 @@ func printOutArr(v []interface{}, strPre string) (ret string) {
 			return fmt.Sprintf("%ss%d", strPre, structCount)
 		}
 	}
+
 	return
 }
