@@ -34,13 +34,14 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
+	// 处理windows txt文件前面3个字节可能是0xEF, 0xBB, 0xBF的情况
 	if bytes.HasPrefix(b, []byte{0xEF, 0xBB, 0xBF}) {
 		b = b[3:]
 	}
 
 	if err = jsonUnmarshal(b); err != nil {
 		fmt.Println(err)
+		return
 	}
 
 	for i := range arrStruct {
@@ -88,12 +89,13 @@ func printOut(d map[string]interface{}) {
 	for k, v := range d {
 		// 首字母必须大写才能解析
 		b := []byte(k)
+		var ucaseK string = k
 		if b[0] >= 'a' && b[0] <= 'z' {
 			b[0] = b[0] + 'A' - 'a'
-			k = string(b)
+			ucaseK = string(b)
 		}
 		// 结构体的属性名称
-		str += fmt.Sprintf("\t%s ", k)
+		str += fmt.Sprintf("\t%s ", ucaseK)
 		// 获取结构体的属性的类型
 		str += getType(v)
 		// 为结构体添加tag
