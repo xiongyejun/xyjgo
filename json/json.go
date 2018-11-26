@@ -50,7 +50,7 @@ func main() {
 }
 
 func jsonUnmarshal(b []byte) (err error) {
-	fmt.Printf("%s\r\n", string(b))
+	fmt.Printf("%s\r\n\r\n", string(b))
 
 	d := make(map[string]interface{})
 	if err := json.Unmarshal(b, &d); err != nil {
@@ -61,8 +61,28 @@ func jsonUnmarshal(b []byte) (err error) {
 	return nil
 }
 
+// 根据json的值的类型，返回go结构体需要的字符串
+func getType(v interface{}) string {
+	vType := reflect.TypeOf(v).String()
+
+	switch vType {
+	case "map[string]interface {}":
+		// 新的1个结构体
+		structCount++
+		printOut(v.(map[string]interface{}))
+		return fmt.Sprintf("s%d", structCount)
+	case "[]interface {}":
+		return fmt.Sprint(printOutArr(v.([]interface{}), "[]"))
+
+	default:
+		return vType
+	}
+}
+
+// 得到1个“map[string]interface{}”类型的结构体字符str，存放到arrStruct
 func printOut(d map[string]interface{}) {
 	var str string
+	// 结构体的开头 type s0 struct {
 	str = fmt.Sprintf("type s%d struct {\r\n", structCount)
 
 	for k, v := range d {
@@ -72,63 +92,24 @@ func printOut(d map[string]interface{}) {
 			b[0] = b[0] + 'A' - 'a'
 			k = string(b)
 		}
-		str += fmt.Sprint("\t", k)
-		vType := reflect.TypeOf(v).String()
-		//		fmt.Println(vType)
-
-		switch vType {
-		case "map[string]interface{}":
-			// 新的1个结构体
-			structCount++
-			printOut(v.(map[string]interface{}))
-			str += fmt.Sprintf(" s%d", structCount)
-		case "[]interface {}":
-			str += fmt.Sprint("\t", printOutArr(v.([]interface{}), "[]"))
-
-		default:
-			str += fmt.Sprint(" ", vType)
-		}
-		//		switch v.(type) {
-		//		case string:
-		//			fmt.Println(" ", v)
-		//		case int:
-		//			fmt.Println(" ", v)
-		//		case float64:
-		//			fmt.Println(" ", v)
-		//		case map[string]interface{}:
-		//			printOut(v.(map[string]interface{}))
-		//		case []interface{}:
-		//			fmt.Println(" ", v)
-
-		//			vv := v.([]interface{})
-		//			printOutArr(vv)
-		//		}
-
+		// 结构体的属性名称
+		str += fmt.Sprintf("\t%s ", k)
+		// 获取结构体的属性的类型
+		str += getType(v)
+		// 为结构体添加tag
 		str += fmt.Sprintln("\t`json:" + `"` + k + "\"`")
 	}
-
+	// 最后的"}"
 	str += "}\r\n"
-
+	// 完成1个结构体字符的构造，存放到arrStruct
 	arrStruct = append(arrStruct, str)
 }
 
 // strPre	存在数组中的数组情况，所以可能有多个“[]”
 func printOutArr(v []interface{}, strPre string) (ret string) {
-	for i := range v {
-		switch v[i].(type) {
-		case []interface{}:
-			// 数组中的数组
-			strPre += "[]"
-
-			vv := v[i].([]interface{})
-			return printOutArr(vv, strPre)
-		case map[string]interface{}:
-			// 新的1个结构体
-			structCount++
-			printOut(v[i].(map[string]interface{}))
-			return fmt.Sprintf("%ss%d", strPre, structCount)
-		}
+	if len(v) == 0 {
+		return " string"
+	} else {
+		return strPre + getType(v[0])
 	}
-
-	return
 }
