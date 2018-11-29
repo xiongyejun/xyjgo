@@ -12,14 +12,15 @@ func Test_func(t *testing.T) {
 	}
 
 	var ret string
-	var tgt string
-	if ret, tgt, err = b.Translate("你好，我是谁？你看过射雕英雄传吗？"); err != nil {
+	if ret, err = b.Translate("Have you seen the legend of the condor heroes?", true); err != nil {
 		t.Error(err)
 	} else {
 		print(ret)
 	}
 
-	if err = b.Speak(tgt); err != nil {
+	if ret, err = b.Translate("你是谁？你好吗？", true); err != nil {
 		t.Error(err)
+	} else {
+		print(ret)
 	}
 }

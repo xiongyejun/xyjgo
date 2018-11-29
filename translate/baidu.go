@@ -14,9 +14,9 @@ func NewBaiDu() (b *baiDu, err error) {
 	return nil, errors.New("未实现")
 }
 
-func (me *baiDu) Translate(value string) (ret string, tgt string, err error) {
-	return "", "", errors.New("未实现")
+func (me *baiDu) Translate(value string, bSpeak bool) (ret string, err error) {
+	return "", errors.New("未实现")
 }
-func (me *baiDu) Speak(value string) (err error) {
+func (me *baiDu) speak(value string) (err error) {
 	return errors.New("未实现")
 }

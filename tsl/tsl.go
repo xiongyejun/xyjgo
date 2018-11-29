@@ -21,6 +21,7 @@ func main() {
 		return
 	}
 
+	printCmd()
 	r := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("Enter Cmd->")
@@ -54,16 +55,12 @@ func handleCommands(tokens []string) {
 		}
 
 	default:
-		if ret, tgt, err := tsl.Translate(strings.Join(tokens, " ")); err != nil {
+		if ret, err := tsl.Translate(strings.Join(tokens, " "), true); err != nil {
 			fmt.Println(err)
 		} else {
 			colorPrint.SetColor(colorPrint.White, colorPrint.DarkMagenta)
 			fmt.Println(ret)
 			colorPrint.ReSetColor()
-
-			if err := tsl.Speak(tgt); err != nil {
-				fmt.Println(err)
-			}
 		}
 	}
 }

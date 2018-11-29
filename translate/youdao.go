@@ -4,6 +4,8 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -43,17 +45,32 @@ func NewYouDao() (y *youDao, err error) {
 }
 
 // 翻译
-func (me *youDao) Translate(value string) (ret string, tgt string, err error) {
+func (me *youDao) Translate(value string, bSpeak bool) (ret string, err error) {
 	var b []byte
+	var tgt string
 	if b, err = httpPost(me.url, "i="+value+"&doctype=json"); err != nil {
 		return
 	}
 
-	return me.getResult(b)
+	if ret, tgt, err = me.getResult(b); err != nil {
+		return
+	}
+
+	if bSpeak {
+		var speakValue string = tgt
+		if (value[0] >= 'a' && value[0] <= 'z') || (value[0] >= 'A' && value[0] <= 'Z') {
+			speakValue = value
+		}
+		if err = me.speak(speakValue); err != nil {
+			fmt.Println(errors.New("speak出错：" + err.Error()))
+		}
+	}
+
+	return ret, nil
 }
 
 // 朗读
-func (me *youDao) Speak(value string) (err error) {
+func (me *youDao) speak(value string) (err error) {
 	// 名称都用sha1保存
 	sha := sha1.New()
 	if _, err = sha.Write([]byte(value)); err != nil {

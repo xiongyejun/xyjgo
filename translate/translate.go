@@ -9,8 +9,8 @@ import (
 )
 
 type ITranslate interface {
-	Translate(value string) (ret string, tgt string, err error)
-	Speak(value string) (err error)
+	Translate(value string, bSpeak bool) (ret string, err error)
+	speak(value string) (err error)
 }
 
 type tsl struct {
