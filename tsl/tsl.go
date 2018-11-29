@@ -14,11 +14,13 @@ import (
 
 var tsl translate.ITranslate
 
-func init() {
-	tsl = translate.NewYouDao()
-}
-
 func main() {
+	var err error
+	if tsl, err = translate.NewYouDao(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	r := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("Enter Cmd->")
@@ -39,17 +41,29 @@ func handleCommands(tokens []string) {
 	case "printCmd":
 		printCmd()
 	case "baidu":
-		tsl = translate.NewBaiDu()
+		var err error
+		if tsl, err = translate.NewBaiDu(); err != nil {
+			fmt.Println(err)
+			return
+		}
 	case "youdao":
-		tsl = translate.NewYouDao()
+		var err error
+		if tsl, err = translate.NewYouDao(); err != nil {
+			fmt.Println(err)
+			return
+		}
 
 	default:
-		if ret, err := tsl.Translate(strings.Join(tokens, " ")); err != nil {
+		if ret, tgt, err := tsl.Translate(strings.Join(tokens, " ")); err != nil {
 			fmt.Println(err)
 		} else {
 			colorPrint.SetColor(colorPrint.White, colorPrint.DarkMagenta)
 			fmt.Println(ret)
 			colorPrint.ReSetColor()
+
+			if err := tsl.Speak(tgt); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
 }
