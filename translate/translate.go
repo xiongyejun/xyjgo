@@ -9,11 +9,14 @@ import (
 )
 
 type ITranslate interface {
-	Translate(value string) (ret string, err error)
+	Translate(value string) (ret string, tgt string, err error)
+	Speak(value string) (err error)
 }
 
 type tsl struct {
-	url string
+	url         string
+	mp3URL      string
+	mp3SavePath string
 }
 
 func httpPost(url string, strPost string) (ret []byte, err error) {
@@ -22,9 +25,20 @@ func httpPost(url string, strPost string) (ret []byte, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	var body []byte
-	if body, err = ioutil.ReadAll(resp.Body); err != nil {
+	if ret, err = ioutil.ReadAll(resp.Body); err != nil {
 		return
 	}
-	return body, err
+	return
+}
+
+func httpGet(url string) (ret []byte, err error) {
+	var resp *http.Response
+	if resp, err = http.Get(url); err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	if ret, err = ioutil.ReadAll(resp.Body); err != nil {
+		return
+	}
+	return
 }

@@ -1,15 +1,22 @@
 package translate
 
-type BaiDu struct {
+import (
+	"errors"
+)
+
+type baiDu struct {
 	tsl
 }
 
-func NewBaiDu() *BaiDu {
-	b := new(BaiDu)
+func NewBaiDu() (b *baiDu, err error) {
+	b = new(baiDu)
 	b.url = "https://fanyi.baidu.com/"
-	return b
+	return nil, errors.New("未实现")
 }
 
-func (me *BaiDu) Translate(value string) (ret string, err error) {
-	return
+func (me *baiDu) Translate(value string) (ret string, tgt string, err error) {
+	return "", "", errors.New("未实现")
+}
+func (me *baiDu) Speak(value string) (err error) {
+	return errors.New("未实现")
 }
