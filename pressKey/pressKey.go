@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/xiongyejun/xyjgo/winAPI/user32"
 	"github.com/xiongyejun/xyjgo/winAPI/user32/keyboard"
 )
 
@@ -14,10 +15,11 @@ type key struct {
 }
 
 type Key struct {
-	Keys  []*key
-	ch    chan *key
-	chLen int
-	bStop bool
+	WindowText string
+	Keys       []*key
+	ch         chan *key
+	chLen      int
+	bStop      bool
 }
 
 func New() *Key {
@@ -56,7 +58,7 @@ func (me *Key) Start() {
 	// 不停的循环读取channel里的数据
 	for {
 		for k := range me.ch {
-			k.press(me.ch)
+			k.press(me.ch, me.WindowText == user32.GetWindowText(user32.GetForegroundWindow()))
 			if me.bStop {
 				close(me.ch)
 				return
@@ -68,12 +70,16 @@ func (me *Key) Start() {
 
 }
 
-func (me *key) press(ch chan *key) {
-	keyboard.Press(me.WVk)
-	if me.Delay > 0 {
-		// 在一定时间内阻止键盘输入
-		time.Sleep(time.Duration(me.Delay))
+// 是否是需要的活动窗口
+func (me *key) press(ch chan *key, bWindowText bool) {
+	if bWindowText {
+		keyboard.Press(me.WVk)
+		if me.Delay > 0 {
+			// 在一定时间内阻止键盘输入
+			time.Sleep(time.Duration(me.Delay))
+		}
 	}
+
 	// 按完之后，等到了时间Time，继续插入到channel
 	go func() {
 		time.Sleep(me.Time / 1000 * time.Second)

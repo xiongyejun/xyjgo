@@ -8,8 +8,12 @@ import (
 )
 
 var (
-	lib       uintptr
-	sendInput uintptr
+	lib                 uintptr
+	sendInput           uintptr
+	keybd_event         uintptr
+	getForegroundWindow uintptr
+	getWindowText       uintptr
+	getWindowTextLength uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -22,6 +26,10 @@ func init() {
 
 	// Functions
 	sendInput = win.MustGetProcAddress(lib, "SendInput")
+	keybd_event = win.MustGetProcAddress(lib, "keybd_event")
+	getForegroundWindow = win.MustGetProcAddress(lib, "GetForegroundWindow")
+	getWindowText = win.MustGetProcAddress(lib, "GetWindowTextW")
+	getWindowTextLength = win.MustGetProcAddress(lib, "GetWindowTextLengthW")
 }
 
 // INPUT Type
@@ -116,6 +124,51 @@ func SendInput(nInputs uint32, pInputs unsafe.Pointer, cbSize int32) uint32 {
 		uintptr(pInputs),
 		uintptr(cbSize))
 
+	return uint32(ret)
+}
+
+//byte bVk,    //虚拟键值
+//byte bScan,// 一般为0
+//int dwFlags,  //这里是整数类型  0 为按下，2为释放
+//int dwExtraInfo  //这里是整数类型 一般情况下设成为 0
+func Keybd_event(bVk byte, bScan byte, dwFlags int, dwExtraInfo int) uint32 {
+	ret, _, _ := syscall.Syscall6(keybd_event, 4,
+		uintptr(bVk),
+		uintptr(bScan),
+		uintptr(dwFlags),
+		uintptr(dwExtraInfo),
+		0,
+		0)
+
+	return uint32(ret)
+}
+
+func GetForegroundWindow() uint32 {
+	ret, _, _ := syscall.Syscall(getForegroundWindow, 0,
+		0,
+		0,
+		0)
+
+	return uint32(ret)
+}
+
+func GetWindowText(hwnd uint32) string {
+	iLen := GetWindowTextLength(hwnd) + 1
+	buf := make([]uint16, iLen)
+
+	_, _, err := syscall.Syscall(getWindowText, 3,
+		uintptr(hwnd), uintptr(unsafe.Pointer(&buf[0])),
+		uintptr(iLen))
+
+	if err > 0 {
+		return ""
+	}
+	return syscall.UTF16ToString(buf)
+
+}
+
+func GetWindowTextLength(hwnd uint32) uint32 {
+	ret, _, _ := syscall.Syscall(getWindowTextLength, 1, uintptr(hwnd), 0, 0)
 	return uint32(ret)
 }
 

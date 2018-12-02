@@ -27,6 +27,7 @@ var s *skey
 func init() {
 	s = new(skey)
 	s.k = pressKey.New()
+	s.k.WindowText = "MapleStory"
 	s.path = os.Getenv("GOPATH") + `\src\github.com\xiongyejun\xyjgo\mxd\`
 }
 
