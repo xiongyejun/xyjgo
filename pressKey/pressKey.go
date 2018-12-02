@@ -8,10 +8,11 @@ import (
 )
 
 type key struct {
-	WVk   uint16
+	WVk   int
 	Time  time.Duration // 间隔，毫秒
 	Delay uint          // 按键后延迟时间，毫秒
 }
+
 type Key struct {
 	Keys  []*key
 	ch    chan *key
@@ -22,16 +23,15 @@ type Key struct {
 func New() *Key {
 	K := new(Key)
 	K.chLen = 10
-	K.ch = make(chan *key, K.chLen)
 	return K
 }
 
-func newkey(WVk uint16, Time time.Duration, Delay uint) (k *key) {
+func newkey(WVk int, Time time.Duration, Delay uint) (k *key) {
 	return &key{WVk, Time, Delay}
 }
 
 // 增加1个按键
-func (me *Key) Add(WVk uint16, Time time.Duration, Delay uint) (err error) {
+func (me *Key) Add(WVk int, Time time.Duration, Delay uint) (err error) {
 	me.Keys = append(me.Keys, newkey(WVk, Time, Delay))
 	return nil
 }
@@ -42,11 +42,14 @@ func (me *Key) Remove(index int) (err error) {
 		return errors.New("out of range")
 	}
 
-	me.Keys = append(me.Keys[0:index], me.Keys[index:]...)
+	me.Keys = append(me.Keys[0:index], me.Keys[index+1:]...)
 	return nil
 }
 
 func (me *Key) Start() {
+	defer keyboard.Free()
+	me.ch = make(chan *key, me.chLen)
+
 	for i := range me.Keys {
 		me.ch <- me.Keys[i]
 	}
@@ -54,11 +57,12 @@ func (me *Key) Start() {
 	for {
 		for k := range me.ch {
 			k.press(me.ch)
+			if me.bStop {
+				close(me.ch)
+				return
+			}
 		}
-		if me.bStop {
-			close(me.ch)
-			return
-		}
+
 		time.Sleep(time.Second)
 	}
 
@@ -68,10 +72,14 @@ func (me *key) press(ch chan *key) {
 	keyboard.Press(me.WVk)
 	if me.Delay > 0 {
 		// 在一定时间内阻止键盘输入
+		time.Sleep(time.Duration(me.Delay))
 	}
 	// 按完之后，等到了时间Time，继续插入到channel
-	time.Sleep(me.Time / 1000 * time.Second)
-	ch <- me
+	go func() {
+		time.Sleep(me.Time / 1000 * time.Second)
+		ch <- me
+	}()
+
 }
 
 //func (me *Key) Pause() {

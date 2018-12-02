@@ -9,10 +9,10 @@ func Test_press(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	defer Free()
-	t.Log(Press(VK_A))
-	t.Log(Press(VK_G))
-	t.Log(Press(VK_S))
-	t.Log(Press(VK_1))
-	t.Log(Press(VK_9))
+	t.Log('e')
+	t.Logf("%x %x\r\n", arrKeyTable['a'].vk, arrKeyTable['a'].scan)
+	Press('e')
+	t.Log('f')
+	Press('f')
 
 }
