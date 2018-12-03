@@ -11,7 +11,7 @@ import (
 type key struct {
 	WVk   int
 	Time  time.Duration // 间隔，毫秒
-	Delay uint          // 按键后延迟时间，毫秒
+	Delay time.Duration // 按键后延迟时间，毫秒
 }
 
 type Key struct {
@@ -28,12 +28,12 @@ func New() *Key {
 	return K
 }
 
-func newkey(WVk int, Time time.Duration, Delay uint) (k *key) {
+func newkey(WVk int, Time time.Duration, Delay time.Duration) (k *key) {
 	return &key{WVk, Time, Delay}
 }
 
 // 增加1个按键
-func (me *Key) Add(WVk int, Time time.Duration, Delay uint) (err error) {
+func (me *Key) Add(WVk int, Time time.Duration, Delay time.Duration) (err error) {
 	me.Keys = append(me.Keys, newkey(WVk, Time, Delay))
 	return nil
 }
@@ -76,7 +76,7 @@ func (me *key) press(ch chan *key, bWindowText bool) {
 		keyboard.Press(me.WVk)
 		if me.Delay > 0 {
 			// 在一定时间内阻止键盘输入
-			time.Sleep(time.Duration(me.Delay))
+			time.Sleep(me.Delay)
 		}
 	}
 

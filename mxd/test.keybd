@@ -1,1 +1,67 @@
-{"Keys":[{"WVk":97,"Time":6000,"Delay":0},{"WVk":53,"Time":7000,"Delay":1},{"WVk":65,"Time":4000,"Delay":2},{"WVk":73,"Time":8000,"Delay":3}]}
+{
+
+  "Keys": [
+
+    {
+
+      "OnOff": false,
+
+      "WVk": 97,
+
+      "Time": 6000,
+
+      "Delay": 0
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 53,
+
+      "Time": 7000,
+
+      "Delay": 1
+
+    },
+
+    {
+
+      "OnOff": false,
+
+      "WVk": 65,
+
+      "Time": 4000,
+
+      "Delay": 2
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 73,
+
+      "Time": 8000,
+
+      "Delay": 3
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 48,
+
+      "Time": 3000,
+
+      "Delay": 300
+
+    }
+
+  ]
+
+}

@@ -14,8 +14,16 @@ import (
 	"github.com/xiongyejun/xyjgo/pressKey"
 )
 
+type key struct {
+	OnOff bool // 开关
+	WVk   int
+	Time  time.Duration // 间隔，毫秒
+	Delay time.Duration // 按键后延迟时间，毫秒
+}
+
 type skey struct {
 	name string
+	Keys []*key
 	k    *pressKey.Key
 	path string
 }
@@ -49,7 +57,7 @@ func main() {
 	}
 
 	// 退出的时候保存当前的设置
-	if s.name != "" && len(s.k.Keys) > 0 {
+	if s.name != "" && len(s.Keys) > 0 {
 		if err := saveKey(s.path + s.name + FILE_EXT); err != nil {
 			fmt.Println(err)
 		}
@@ -107,12 +115,9 @@ func handleCommands(tokens []string) {
 			fmt.Println(err)
 			return
 		}
-		Delay := uint(tmp)
+		Delay := time.Duration(tmp)
 
-		if err = s.k.Add(WVk, Time, Delay); err != nil {
-			fmt.Println(err)
-			return
-		}
+		s.Keys = append(s.Keys, &key{true, WVk, Time, Delay})
 
 	case "del":
 		if s.name == "" {
@@ -129,23 +134,58 @@ func handleCommands(tokens []string) {
 			fmt.Println(err)
 			return
 		} else {
-			if err = s.k.Remove(index); err != nil {
-				fmt.Println(err)
+			if index >= len(s.Keys) {
+				fmt.Println("out of range")
 				return
 			}
+
+			s.Keys = append(s.Keys[0:index], s.Keys[index+1:]...)
 		}
 
 	case "ls":
-		if len(s.k.Keys) == 0 {
+		if len(s.Keys) == 0 {
 			fmt.Println("没有设置。")
 			return
 		}
-		fmt.Printf("%2s %4s %10s %s\r\n", "No", "key", "Time(ms)", "Delay(ms)")
-		for i := range s.k.Keys {
-			fmt.Printf("%2d %4c %10d %d\r\n", i, s.k.Keys[i].WVk, s.k.Keys[i].Time, s.k.Keys[i].Delay)
+		fmt.Printf("%2s %6s %4s %10s %s\r\n", "No", "State", "key", "Time(ms)", "Delay(ms)")
+		for i := range s.Keys {
+			fmt.Printf("%2d %6s %4c %10d %d\r\n", i, printOnOff(s.Keys[i].OnOff), s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay)
 		}
 
+	case "status":
+		if s.name == "" {
+			fmt.Println("还没有设置，先new1个或者read1个")
+			return
+		}
+
+		if len(tokens) != 2 {
+			fmt.Println("status <index> -- 开关")
+			return
+		}
+
+		if index, err := strconv.Atoi(tokens[1]); err != nil {
+			fmt.Println(err)
+			return
+		} else {
+			if index >= len(s.Keys) {
+				fmt.Println("out of range")
+				return
+			}
+
+			s.Keys[index].OnOff = !s.Keys[index].OnOff
+		}
 	case "start":
+		if len(s.Keys) == 0 {
+			fmt.Println("没有设置。")
+			return
+		}
+
+		s.k = pressKey.New()
+		for i := range s.Keys {
+			if s.Keys[i].OnOff {
+				s.k.Add(s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay)
+			}
+		}
 		fmt.Println("3秒后开始按键。")
 		time.Sleep(3 * time.Second)
 		go s.k.Start()
@@ -156,20 +196,28 @@ func handleCommands(tokens []string) {
 	}
 }
 
+func printOnOff(b bool) string {
+	if b {
+		return "√"
+	} else {
+		return "×"
+	}
+}
+
 func readKey(fileName string) (err error) {
 	var b []byte
 	if b, err = ioutil.ReadFile(fileName); err != nil {
 		return
 	}
-	s.k = pressKey.New()
-	if err = json.Unmarshal(b, s.k); err != nil {
+
+	if err = json.Unmarshal(b, s); err != nil {
 		return
 	}
 	return nil
 }
 func saveKey(fileName string) (err error) {
 	var b []byte
-	if b, err = json.Marshal(s.k); err != nil {
+	if b, err = json.MarshalIndent(s, "\r\n", "  "); err != nil {
 		return
 	}
 	if err = ioutil.WriteFile(fileName, b, 0666); err != nil {
@@ -188,6 +236,7 @@ func printCmd() {
  del <index> -- 删除1个按键
  start -- 开始
  stop -- 结束
+ status <index> -- 开关
  read <name> -- 读取1个设置
 `)
 	colorPrint.ReSetColor()

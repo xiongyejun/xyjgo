@@ -13,6 +13,7 @@ type keyTable struct {
 
 var arrKeyTable []keyTable
 
+// https://www.cnblogs.com/wqw/archive/2009/08/30/1556618.html
 func init() {
 	arrKeyTable = make([]keyTable, 256)
 
