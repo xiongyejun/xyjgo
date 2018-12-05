@@ -181,6 +181,12 @@ func handleCommands(tokens []string) {
 			fmt.Println("退出前请保存文件：save")
 		}
 
+	case "project":
+		if err := of.vp.UnProtectProject(); err != nil {
+			fmt.Println(err)
+			return
+		}
+
 	case "save":
 		var oldFileName string = of.fileName
 		var saveFileName string
@@ -228,6 +234,7 @@ func printCmd() {
 	fmt.Println(`
  Enter following commands to control:
  ls -- 查看模块列表
+ project -- 破解vba密码
  show <ModuleName> -- 查看模块代码
  showi <ModuleIndex> -- 查看模块代码
  sm <ModuleName> -- 保存模块代码为文件
