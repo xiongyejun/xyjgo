@@ -1,1 +1,105 @@
-{"WindowText":"","Keys":[{"WVk":52,"Time":200000,"Delay":0},{"WVk":53,"Time":300000,"Delay":0}]}
+{
+
+  "Keys": [
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 79,
+
+      "Time": 199000,
+
+      "Delay": 1500,
+
+      "Note": "轻功"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 80,
+
+      "Time": 199000,
+
+      "Delay": 1500,
+
+      "Note": "快速短刀"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 76,
+
+      "Time": 199000,
+
+      "Delay": 1500,
+
+      "Note": "金钱盾"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 86,
+
+      "Time": 199000,
+
+      "Delay": 1500,
+
+      "Note": "侠盗本能"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 67,
+
+      "Time": 199000,
+
+      "Delay": 1500,
+
+      "Note": "影分身"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 56,
+
+      "Time": 900000,
+
+      "Delay": 1500,
+
+      "Note": "冒险岛勇士"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 54,
+
+      "Time": 110000,
+
+      "Delay": 1500,
+
+      "Note": "幸运前"
+
+    }
+
+  ]
+
+}

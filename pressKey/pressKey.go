@@ -9,7 +9,7 @@ import (
 )
 
 type key struct {
-	WVk   int
+	WVk   uint16
 	Time  time.Duration // 间隔，毫秒
 	Delay time.Duration // 按键后延迟时间，毫秒
 }
@@ -28,12 +28,12 @@ func New() *Key {
 	return K
 }
 
-func newkey(WVk int, Time time.Duration, Delay time.Duration) (k *key) {
+func newkey(WVk uint16, Time time.Duration, Delay time.Duration) (k *key) {
 	return &key{WVk, Time, Delay}
 }
 
 // 增加1个按键
-func (me *Key) Add(WVk int, Time time.Duration, Delay time.Duration) (err error) {
+func (me *Key) Add(WVk uint16, Time time.Duration, Delay time.Duration) (err error) {
 	me.Keys = append(me.Keys, newkey(WVk, Time, Delay))
 	return nil
 }
@@ -50,6 +50,8 @@ func (me *Key) Remove(index int) (err error) {
 
 func (me *Key) Start() {
 	defer keyboard.Free()
+	hwnd := user32.FindWindow("", me.WindowText)
+
 	me.ch = make(chan *key, me.chLen)
 
 	for i := range me.Keys {
@@ -58,7 +60,7 @@ func (me *Key) Start() {
 	// 不停的循环读取channel里的数据
 	for {
 		for k := range me.ch {
-			k.press(me.ch, me.WindowText == user32.GetWindowText(user32.GetForegroundWindow()))
+			k.press(me.ch, hwnd == user32.GetForegroundWindow())
 			if me.bStop {
 				close(me.ch)
 				return
@@ -76,7 +78,7 @@ func (me *key) press(ch chan *key, bWindowText bool) {
 		keyboard.Press(me.WVk)
 		if me.Delay > 0 {
 			// 在一定时间内阻止键盘输入
-			time.Sleep(me.Delay)
+			time.Sleep(me.Delay / 1000 * time.Second)
 		}
 	}
 

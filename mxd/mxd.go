@@ -16,9 +16,10 @@ import (
 
 type key struct {
 	OnOff bool // 开关
-	WVk   int
+	WVk   uint16
 	Time  time.Duration // 间隔，毫秒
 	Delay time.Duration // 按键后延迟时间，毫秒
+	Note  string        // 备注说明
 }
 
 type skey struct {
@@ -98,11 +99,11 @@ func handleCommands(tokens []string) {
 			return
 		}
 
-		if len(tokens) != 4 {
-			fmt.Println("add <键, 间隔时间, 延时> -- 增加1个按键")
+		if len(tokens) != 5 {
+			fmt.Println("add <键, 间隔时间, 延时，备注说明> -- 增加1个按键")
 			return
 		}
-		WVk := int([]byte(tokens[1])[0])
+		WVk := uint16([]byte(tokens[1])[0])
 		var tmp int
 		var err error
 		if tmp, err = strconv.Atoi(tokens[2]); err != nil {
@@ -117,7 +118,7 @@ func handleCommands(tokens []string) {
 		}
 		Delay := time.Duration(tmp)
 
-		s.Keys = append(s.Keys, &key{true, WVk, Time, Delay})
+		s.Keys = append(s.Keys, &key{true, WVk, Time, Delay, tokens[4]})
 
 	case "del":
 		if s.name == "" {
@@ -147,9 +148,9 @@ func handleCommands(tokens []string) {
 			fmt.Println("没有设置。")
 			return
 		}
-		fmt.Printf("%2s %6s %4s %10s %s\r\n", "No", "State", "key", "Time(ms)", "Delay(ms)")
+		fmt.Printf("%2s %6s %4s %10s %s %s\r\n", "No", "State", "key", "Time(ms)", "Delay(ms)", "Note")
 		for i := range s.Keys {
-			fmt.Printf("%2d %6s %4c %10d %d\r\n", i, printOnOff(s.Keys[i].OnOff), s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay)
+			fmt.Printf("%2d %6s %4c %10d %10d %s\r\n", i, printOnOff(s.Keys[i].OnOff), s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay, s.Keys[i].Note)
 		}
 
 	case "status":
@@ -181,8 +182,12 @@ func handleCommands(tokens []string) {
 		}
 
 		s.k = pressKey.New()
+		s.k.WindowText = "MapleStory"
 		for i := range s.Keys {
 			if s.Keys[i].OnOff {
+				if s.Keys[i].WVk >= 'a' && s.Keys[i].WVk <= 'z' {
+					s.Keys[i].WVk = s.Keys[i].WVk + 'A' - 'a'
+				}
 				s.k.Add(s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay)
 			}
 		}
@@ -213,6 +218,7 @@ func readKey(fileName string) (err error) {
 	if err = json.Unmarshal(b, s); err != nil {
 		return
 	}
+
 	return nil
 }
 func saveKey(fileName string) (err error) {
@@ -232,7 +238,7 @@ func printCmd() {
 	fmt.Println(` Enter following commands to control:
  new <name> -- 新设置1个
  ls -- 查看当前设置的按键
- add <键, 间隔时间, 延时> -- 增加1个按键
+ add <键, 间隔时间, 延时，备注说明> -- 增加1个按键
  del <index> -- 删除1个按键
  start -- 开始
  stop -- 结束
