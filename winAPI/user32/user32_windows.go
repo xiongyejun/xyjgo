@@ -17,6 +17,7 @@ var (
 	getWindowTextLength uintptr
 	sendMessage         uintptr
 	mapVirtualKey       uintptr
+	blockInput          uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -36,6 +37,7 @@ func init() {
 	getWindowTextLength = win.MustGetProcAddress(lib, "GetWindowTextLengthW")
 	sendMessage = win.MustGetProcAddress(lib, "SendMessageW")
 	mapVirtualKey = win.MustGetProcAddress(lib, "MapVirtualKeyW")
+	blockInput = win.MustGetProcAddress(lib, "BlockInput")
 }
 
 // INPUT Type
@@ -170,6 +172,16 @@ func MapVirtualKey(uCode, uMapType uint32) uint32 {
 	ret, _, _ := syscall.Syscall(mapVirtualKey, 2,
 		uintptr(uCode),
 		uintptr(uMapType),
+		0)
+
+	return uint32(ret)
+}
+
+//BOOL BlockInput( BOOL fBlockIt);
+func BlockInput(fBlockIt uint32) uint32 {
+	ret, _, _ := syscall.Syscall(blockInput, 1,
+		uintptr(fBlockIt),
+		0,
 		0)
 
 	return uint32(ret)
