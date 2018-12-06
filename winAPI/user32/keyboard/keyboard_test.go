@@ -2,17 +2,18 @@ package keyboard
 
 import (
 	"testing"
-	"time"
+
+	"github.com/xiongyejun/xyjgo/winAPI/user32"
 )
 
 func Test_press(t *testing.T) {
-	time.Sleep(1 * time.Second)
+	//	Press('2')
+	//	Press('3')
+	//	Press('4')
 
-	defer Free()
-	t.Log('e')
-	t.Logf("%x %x\r\n", arrKeyTable['a'].vk, arrKeyTable['a'].scan)
-	Press('e')
-	t.Log('f')
-	Press('f')
+	hwnd := user32.FindWindow("", "1.txt - 记事本")
+	t.Log(hwnd)
 
+	SendMessage(hwnd, 'a')
+	SendMessage(hwnd, '1')
 }

@@ -13,7 +13,10 @@ var (
 	keybd_event         uintptr
 	getForegroundWindow uintptr
 	getWindowText       uintptr
+	findWindow          uintptr
 	getWindowTextLength uintptr
+	sendMessage         uintptr
+	mapVirtualKey       uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -29,7 +32,10 @@ func init() {
 	keybd_event = win.MustGetProcAddress(lib, "keybd_event")
 	getForegroundWindow = win.MustGetProcAddress(lib, "GetForegroundWindow")
 	getWindowText = win.MustGetProcAddress(lib, "GetWindowTextW")
+	findWindow = win.MustGetProcAddress(lib, "FindWindowW")
 	getWindowTextLength = win.MustGetProcAddress(lib, "GetWindowTextLengthW")
+	sendMessage = win.MustGetProcAddress(lib, "SendMessageW")
+	mapVirtualKey = win.MustGetProcAddress(lib, "MapVirtualKeyW")
 }
 
 // INPUT Type
@@ -74,6 +80,12 @@ const (
 	KEYEVENTF_KEYUP       = 0x0002
 	KEYEVENTF_SCANCODE    = 0x0008
 	KEYEVENTF_UNICODE     = 0x0004
+)
+
+const (
+	WM_KEYDOWN = 0x0100
+	WM_KEYUP   = 0x0101
+	WM_CHAR    = 0x102
 )
 
 type MOUSEINPUT struct {
@@ -127,6 +139,42 @@ func SendInput(nInputs uint32, pInputs unsafe.Pointer, cbSize int32) uint32 {
 	return uint32(ret)
 }
 
+//WM_KEYDOWN和WM_KEYUP的 wParam就是虚拟键码，MSDN上可以查到
+//也可以通过VkKeyScan将一个字符转换成虚拟键码和shift状态的结合。
+//lParam的0到15位为该键在键盘上的重复次数，经常设为1，即按键1次；
+//16至23位为键盘的扫描码，通过MapVirtualKey配合其参数可以得到；
+//24位为扩展键，即某些右ALT和CTRL；29、30、31位按照说明设置即可
+//（第30位对于keydown在和shift等结合的时候通常要设置为1）。
+// RESULT SendMessage（HWND hWnd，UINT Msg，WPARAM wParam，LPARAM IParam）
+func SendMessage(hWnd uint32, Msg uint, wParam uint16, IParam uint32) uint32 {
+	ret, _, _ := syscall.Syscall6(sendMessage, 4,
+		uintptr(hWnd),
+		uintptr(Msg),
+		uintptr(wParam),
+		uintptr(IParam),
+		0,
+		0)
+
+	return uint32(ret)
+}
+
+// UINT MapVirtualKey（UINT uCode，UINT uMapType）
+//uCode：定义一个键的扫描码或虚拟键码。该值如何解释依赖于uMapType参数的值。
+//uMapType：定义将要执行的翻译。该参数的值依赖于uCode参数的值。取值如下：
+//0：代表uCode是一虚拟键码且被翻译为一扫描码。若一虚拟键码不区分左右，则返回左键的扫描码。若未进行翻译，则函数返回O。
+//1：代表uCode是一扫描码且被翻译为一虚拟键码，且此虚拟键码不区分左右。若未进行翻译，则函数返回0。
+//2：代表uCode为一虚拟键码且被翻译为一未被移位的字符值存放于返回值的低序字中。死键（发音符号）则通过设置返回值的最高位来表示。若未进行翻译，则函数返回0。
+//3：代表uCode为一扫描码且被翻译为区分左右键的一虚拟键码。若未进行翻译，则函数返回0。
+//返回值：返回值可以是一扫描码，或一虚拟键码，或一字符值，这完全依赖于不同的uCode和uMapType的值。若未进行翻译，则函数返回0。
+func MapVirtualKey(uCode, uMapType uint32) uint32 {
+	ret, _, _ := syscall.Syscall(mapVirtualKey, 2,
+		uintptr(uCode),
+		uintptr(uMapType),
+		0)
+
+	return uint32(ret)
+}
+
 //byte bVk,    //虚拟键值
 //byte bScan,// 一般为0
 //int dwFlags,  //这里是整数类型  0 为按下，2为释放
@@ -147,6 +195,17 @@ func GetForegroundWindow() uint32 {
 	ret, _, _ := syscall.Syscall(getForegroundWindow, 0,
 		0,
 		0,
+		0)
+
+	return uint32(ret)
+}
+
+// HWND FindWindow（LPCTSTR IpClassName，LPCTSTR IpWindowName）
+
+func FindWindow(IpClassName string, IpWindowName string) uint32 {
+	ret, _, _ := syscall.Syscall(findWindow, 2,
+		win.StrPtr(IpClassName, win.CODE_UTF16),
+		win.StrPtr(IpWindowName, win.CODE_UTF16),
 		0)
 
 	return uint32(ret)
