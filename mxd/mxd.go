@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/xiongyejun/xyjgo/winAPI/user32/keyboard"
+
 	"github.com/xiongyejun/xyjgo/colorPrint"
 	"github.com/xiongyejun/xyjgo/pressKey"
 )
@@ -27,6 +29,11 @@ type skey struct {
 	Keys []*key
 	k    *pressKey.Key
 	path string
+
+	bMove     bool
+	bStop     bool
+	moveValue uint16
+	moveSleep time.Duration
 }
 
 const FILE_EXT string = ".keybd"
@@ -148,7 +155,7 @@ func handleCommands(tokens []string) {
 			fmt.Println("没有设置。")
 			return
 		}
-		fmt.Printf("%2s %6s %4s %10s %s %s\r\n", "No", "State", "key", "Time(ms)", "Delay(ms)", "Note")
+		fmt.Printf("%2s %6s %4s %10s %10s %s\r\n", "No", "State", "key", "Time(ms)", "Delay(ms)", "Note")
 		for i := range s.Keys {
 			fmt.Printf("%2d %6s %4c %10d %10d %s\r\n", i, printOnOff(s.Keys[i].OnOff), s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay, s.Keys[i].Note)
 		}
@@ -175,12 +182,38 @@ func handleCommands(tokens []string) {
 
 			s.Keys[index].OnOff = !s.Keys[index].OnOff
 		}
+
+	case "move":
+		if s.name == "" {
+			fmt.Println("move <moveSleep(秒)>-- 左右移动")
+			return
+		}
+
+		if len(tokens) != 2 {
+			fmt.Println("status <index> -- 开关")
+			return
+		}
+
+		if i, err := strconv.Atoi(tokens[1]); err != nil {
+			fmt.Println(err)
+			return
+		} else {
+			if i > 0 {
+				s.bMove = true
+				s.moveSleep = time.Duration(i) * time.Second
+			} else {
+				fmt.Println("时间必须大于0")
+			}
+		}
+
 	case "start":
 		if len(s.Keys) == 0 {
 			fmt.Println("没有设置。")
 			return
 		}
 
+		s.bStop = false
+		s.moveValue = keyboard.VK_RIGHT
 		s.k = pressKey.New()
 		s.k.WindowText = "MapleStory"
 		for i := range s.Keys {
@@ -191,11 +224,20 @@ func handleCommands(tokens []string) {
 				s.k.Add(s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay)
 			}
 		}
+		if s.bMove {
+			s.k.Add(keyboard.VK_1, 1000, 1000) //攻击
+			s.k.Add(s.moveValue, 1000, 1000)   // 移动
+
+			fmt.Println("左右移动。")
+			go s.move()
+		}
+
 		fmt.Println("3秒后开始按键。")
 		time.Sleep(3 * time.Second)
 		go s.k.Start()
 	case "stop":
 		s.k.Stop()
+		s.bStop = true
 	default:
 		fmt.Println("不能存在的命令。")
 	}
@@ -232,6 +274,31 @@ func saveKey(fileName string) (err error) {
 	return nil
 }
 
+// 左右移动，定时切换左右按键
+func (me *skey) move() {
+	index := len(s.Keys) + 1 // 攻击和移动增加的不再s.Keys里面
+
+	for {
+		time.Sleep(me.moveSleep)
+
+		if me.bStop {
+			return
+		}
+
+		if s.moveValue == keyboard.VK_LEFT {
+			s.moveValue = keyboard.VK_RIGHT
+		} else {
+			s.moveValue = keyboard.VK_LEFT
+		}
+
+		if err := s.k.Change(index, s.moveValue); err != nil {
+			s.k.Stop()
+			s.bStop = true
+			fmt.Println("stop err:", err)
+		}
+	}
+}
+
 func printCmd() {
 	colorPrint.SetColor(colorPrint.Green, colorPrint.Black)
 
@@ -243,6 +310,7 @@ func printCmd() {
  start -- 开始
  stop -- 结束
  status <index> -- 开关
+ move <moveSleep(秒)>-- 左右移动
  read <name> -- 读取1个设置
 `)
 	colorPrint.ReSetColor()
