@@ -6,12 +6,12 @@ import (
 )
 
 func Test_func(t *testing.T) {
-	t.Log("屏蔽开始")
-	BlockInput(1)
+	for {
+		time.Sleep(30 * time.Second)
+		go func() {
+			ret := BlockInput(0)
+			t.Log("30s BlockInput loop   ret=", ret)
+		}()
+	}
 
-	time.Sleep(3 * time.Second)
-
-	BlockInput(0)
-
-	t.Log("屏蔽结束")
 }
