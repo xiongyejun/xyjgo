@@ -19,17 +19,28 @@ type Key struct {
 	Keys       []*key
 	ch         chan *key
 	chLen      int
-	bStop      bool
 }
+
+var bStop bool
 
 func New() *Key {
 	K := new(Key)
-	K.chLen = 10
+	K.chLen = 100
 	return K
 }
 
 func newkey(WVk uint16, Time time.Duration, Delay time.Duration) (k *key) {
 	return &key{WVk, Time, Delay}
+}
+
+// 换1个键
+func (me *Key) Change(index int, WVk uint16) (err error) {
+	if index >= len(me.Keys) {
+		return errors.New("out of range")
+	}
+
+	me.Keys[index].WVk = WVk
+	return nil
 }
 
 // 增加1个按键
@@ -53,6 +64,7 @@ func (me *Key) Start() {
 	hwnd := user32.FindWindow("", me.WindowText)
 
 	me.ch = make(chan *key, me.chLen)
+	bStop = false
 
 	for i := range me.Keys {
 		me.ch <- me.Keys[i]
@@ -61,7 +73,7 @@ func (me *Key) Start() {
 	for {
 		for k := range me.ch {
 			k.press(me.ch, hwnd == user32.GetForegroundWindow())
-			if me.bStop {
+			if bStop {
 				close(me.ch)
 				return
 			}
@@ -72,22 +84,31 @@ func (me *Key) Start() {
 
 }
 
-// 是否是需要的活动窗口
-func (me *key) press(ch chan *key, bWindowText bool) {
-	if bWindowText {
-		keyboard.Press(me.WVk)
-		if me.Delay > 0 {
-			// 在一定时间内阻止键盘输入
-			time.Sleep(me.Delay / 1000 * time.Second)
-		}
+// bWindow 是否是需要的活动窗口
+func (me *key) press(ch chan *key, bWindow bool) {
+	if bWindow {
+		keyboard.Press(me.WVk, me.Delay/1000*time.Second)
+	} else {
+		//		print("窗口不对啊")
 	}
 
 	// 按完之后，等到了时间Time，继续插入到channel
 	go func() {
 		time.Sleep(me.Time / 1000 * time.Second)
-		ch <- me
+		if !bStop {
+			ch <- me
+		}
 	}()
+}
 
+// 一定要保证最后成功执行了BlockInput(0)
+func blockInput() {
+	print("in blockInput")
+	var ret uint32 = 0
+	for ret == 0 {
+		ret = user32.BlockInput(0)
+	}
+	print("out blockInput")
 }
 
 //func (me *Key) Pause() {
@@ -99,5 +120,5 @@ func (me *key) press(ch chan *key, bWindowText bool) {
 //}
 
 func (me *Key) Stop() {
-	me.bStop = true
+	bStop = true
 }
