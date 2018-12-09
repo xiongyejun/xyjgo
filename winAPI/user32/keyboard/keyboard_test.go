@@ -2,13 +2,17 @@ package keyboard
 
 import (
 	"testing"
-	"time"
+
+	"github.com/xiongyejun/xyjgo/winAPI/user32"
 )
 
 func Test_press(t *testing.T) {
+	//	hwnd := user32.FindWindow("", "1.txt - 记事本")
+	hwnd := user32.FindWindow("", "MapleStory")
+	t.Log("hwnd=", hwnd)
 
-	for i := 0; i < 5; i++ {
-		Press(VK_LEFT, time.Second)
-	}
+	//	ret := SendMessage(hwnd, VK_O)
+	ret := PostMessage(hwnd, VK_P)
 
+	t.Log(ret)
 }

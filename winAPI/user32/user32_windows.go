@@ -16,6 +16,7 @@ var (
 	findWindow          uintptr
 	getWindowTextLength uintptr
 	sendMessage         uintptr
+	postMessage         uintptr
 	mapVirtualKey       uintptr
 	blockInput          uintptr
 )
@@ -36,6 +37,7 @@ func init() {
 	findWindow = win.MustGetProcAddress(lib, "FindWindowW")
 	getWindowTextLength = win.MustGetProcAddress(lib, "GetWindowTextLengthW")
 	sendMessage = win.MustGetProcAddress(lib, "SendMessageW")
+	postMessage = win.MustGetProcAddress(lib, "PostMessageW")
 	mapVirtualKey = win.MustGetProcAddress(lib, "MapVirtualKeyW")
 	blockInput = win.MustGetProcAddress(lib, "BlockInput")
 }
@@ -150,6 +152,17 @@ func SendInput(nInputs uint32, pInputs unsafe.Pointer, cbSize int32) uint32 {
 // RESULT SendMessage（HWND hWnd，UINT Msg，WPARAM wParam，LPARAM IParam）
 func SendMessage(hWnd uint32, Msg uint, wParam uint16, IParam uint32) uint32 {
 	ret, _, _ := syscall.Syscall6(sendMessage, 4,
+		uintptr(hWnd),
+		uintptr(Msg),
+		uintptr(wParam),
+		uintptr(IParam),
+		0,
+		0)
+
+	return uint32(ret)
+}
+func PostMessage(hWnd uint32, Msg uint, wParam uint16, IParam uint32) uint32 {
+	ret, _, _ := syscall.Syscall6(postMessage, 4,
 		uintptr(hWnd),
 		uintptr(Msg),
 		uintptr(wParam),
