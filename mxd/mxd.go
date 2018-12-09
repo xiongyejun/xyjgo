@@ -30,6 +30,7 @@ type skey struct {
 	k    *pressKey.Key
 	path string
 
+	CountOn   int // 设置启动的个数
 	bMove     bool
 	bStop     bool
 	moveValue uint16
@@ -216,12 +217,14 @@ func handleCommands(tokens []string) {
 		s.moveValue = keyboard.VK_RIGHT
 		s.k = pressKey.New()
 		s.k.WindowText = "MapleStory"
+		s.CountOn = 0
 		for i := range s.Keys {
 			if s.Keys[i].OnOff {
 				if s.Keys[i].WVk >= 'a' && s.Keys[i].WVk <= 'z' {
 					s.Keys[i].WVk = s.Keys[i].WVk + 'A' - 'a'
 				}
 				s.k.Add(s.Keys[i].WVk, s.Keys[i].Time, s.Keys[i].Delay)
+				s.CountOn++
 			}
 		}
 		if s.bMove {
@@ -263,6 +266,7 @@ func readKey(fileName string) (err error) {
 
 	return nil
 }
+
 func saveKey(fileName string) (err error) {
 	var b []byte
 	if b, err = json.MarshalIndent(s, "\r\n", "  "); err != nil {
@@ -276,7 +280,7 @@ func saveKey(fileName string) (err error) {
 
 // 左右移动，定时切换左右按键
 func (me *skey) move() {
-	index := len(s.Keys) + 1 // 攻击和移动增加的不再s.Keys里面
+	index := me.CountOn + 1 // 攻击和移动增加的不再s.Keys里面
 
 	for {
 		time.Sleep(me.moveSleep)
@@ -294,7 +298,7 @@ func (me *skey) move() {
 		if err := s.k.Change(index, s.moveValue); err != nil {
 			s.k.Stop()
 			s.bStop = true
-			fmt.Println("stop err:", err)
+			fmt.Println("Change err:", err)
 		}
 	}
 }

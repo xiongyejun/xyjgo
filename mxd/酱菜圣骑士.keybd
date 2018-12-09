@@ -96,7 +96,7 @@
 
       "Delay": 100,
 
-      "Note": "幸运前"
+      "Note": "幸运钱"
 
     },
 
@@ -106,11 +106,11 @@
 
       "WVk": 70,
 
-      "Time": 60000,
+      "Time": 30000,
 
       "Delay": 1000,
 
-      "Note": "倩影暗杀"
+      "Note": "潜影暗杀"
 
     },
 
@@ -130,18 +130,34 @@
 
     {
 
-      "OnOff": true,
+      "OnOff": false,
 
       "WVk": 71,
 
-      "Time": 30000,
+      "Time": 60000,
 
       "Delay": 1000,
 
       "Note": "突然袭击"
 
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 65,
+
+      "Time": 10000,
+
+      "Delay": 300,
+
+      "Note": "偷"
+
     }
 
-  ]
+  ],
+
+  "CountOn": 10
 
 }
