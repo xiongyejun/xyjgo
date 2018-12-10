@@ -19,6 +19,8 @@ var (
 	postMessage         uintptr
 	mapVirtualKey       uintptr
 	blockInput          uintptr
+	getDC               uintptr
+	releaseDC           uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -40,6 +42,8 @@ func init() {
 	postMessage = win.MustGetProcAddress(lib, "PostMessageW")
 	mapVirtualKey = win.MustGetProcAddress(lib, "MapVirtualKeyW")
 	blockInput = win.MustGetProcAddress(lib, "BlockInput")
+	getDC = win.MustGetProcAddress(lib, "GetDC")
+	releaseDC = win.MustGetProcAddress(lib, "ReleaseDC")
 }
 
 // INPUT Type
@@ -161,6 +165,7 @@ func SendMessage(hWnd uint32, Msg uint, wParam uint16, IParam uint32) uint32 {
 
 	return uint32(ret)
 }
+
 func PostMessage(hWnd uint32, Msg uint, wParam uint16, IParam uint32) uint32 {
 	ret, _, _ := syscall.Syscall6(postMessage, 4,
 		uintptr(hWnd),
@@ -225,8 +230,27 @@ func GetForegroundWindow() uint32 {
 	return uint32(ret)
 }
 
-// HWND FindWindow（LPCTSTR IpClassName，LPCTSTR IpWindowName）
+// HDC GetDC(HWND hWnd)；
+func GetDC(HWND uint32) uint32 {
+	ret, _, _ := syscall.Syscall(getDC, 1,
+		uintptr(HWND),
+		0,
+		0)
 
+	return uint32(ret)
+}
+
+// int ReleaseDC(HWND hWnd, HDC hdc)；
+func ReleaseDC(HWND uint32, HDC uint32) uint32 {
+	ret, _, _ := syscall.Syscall(releaseDC, 2,
+		uintptr(HWND),
+		uintptr(HDC),
+		0)
+
+	return uint32(ret)
+}
+
+// HWND FindWindow（LPCTSTR IpClassName，LPCTSTR IpWindowName）
 func FindWindow(IpClassName string, IpWindowName string) uint32 {
 	ret, _, _ := syscall.Syscall(findWindow, 2,
 		win.StrPtr(IpClassName, win.CODE_UTF16),

@@ -5,10 +5,14 @@ import (
 )
 
 func Test_func(t *testing.T) {
-	hwnd := FindWindow("", "MapleStory")
+	defer Free()
+
+	hwnd := FindWindow("", "1.txt - 记事本")
 	t.Log(hwnd)
 
-	ret := SendMessage(hwnd, WM_KEYDOWN, 'O', MapVirtualKey('O', 0))
+	hdc := GetDC(hwnd)
+	t.Log(hdc)
 
+	ret := ReleaseDC(hwnd, hdc)
 	t.Log(ret)
 }
