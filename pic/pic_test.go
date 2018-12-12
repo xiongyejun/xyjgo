@@ -1,32 +1,38 @@
 package pic
 
 import (
-	"image/jpeg"
+	"image"
+	"image/png"
 	"os"
 	"testing"
-
-	"github.com/xiongyejun/xyjgo/winAPI/user32"
 )
 
 func Test_new(t *testing.T) {
-	hwnd := user32.FindWindow("", "MapleStory")
+	if p, err := New("test.png"); err != nil {
+		t.Error(err)
+	} else {
+		if img, _, err := NewImage("find.png"); err != nil {
+			t.Error(err)
+		} else {
+			pic := Image2RGBA(img)
+			if retx, rety, retSimilar, err := p.FindSimilar(pic, 0.85); err != nil {
+				t.Error(err)
+			} else {
+				t.Log(retx, rety, retSimilar)
 
-	var rect user32.RECT
-	user32.GetWindowRect(hwnd, &rect)
+				minp := image.Point{retx, rety}
+				maxp := image.Point{retx + p.Bounds().Max.X, rety + p.Bounds().Max.Y}
+				subimg := pic.SubImage(image.Rectangle{minp, maxp})
 
-	img, err := Screen(hwnd, int(rect.Right-rect.Left), int(rect.Bottom-rect.Top))
-	if err != nil {
-		t.Log(err)
-		return
+				if f, err := os.Create("similar0.85.png"); err != nil {
+					t.Error(err)
+				} else {
+					defer f.Close()
+					if err := png.Encode(f, subimg); err != nil {
+						t.Error(err)
+					}
+				}
+			}
+		}
 	}
-
-	f, err := os.Create("3.jpg")
-	if err != nil {
-		t.Log(err)
-		return
-	}
-	defer f.Close()
-	jpeg.Encode(f, img, nil)
-
-	t.Log(img.At(100, 100))
 }

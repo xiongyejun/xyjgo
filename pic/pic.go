@@ -17,27 +17,53 @@ import (
 	_ "image/png"
 )
 
+type rgba struct {
+	r, g, b, a uint64 // 用uint64避免溢出溢出
+}
 type Pic struct {
 	path string
 	image.Image
-	ext  string
-	sqrt float64
+	ext   string
+	sqrt  float64
+	rgbas [][]rgba
 }
 
 // 新建1个Pic结构
 func New(path string) (p *Pic, err error) {
+	p = new(Pic)
+	p.path = path
+	if p.Image, p.ext, err = NewImage(path); err != nil {
+		return
+	}
+
+	return
+}
+
+func NewImage(path string) (img image.Image, ext string, err error) {
 	var f *os.File
 	if f, err = os.Open(path); err != nil {
 		return
 	}
 	defer f.Close()
 
-	p = new(Pic)
-	p.path = path
-	if p.Image, p.ext, err = image.Decode(f); err != nil {
+	if img, ext, err = image.Decode(f); err != nil {
 		return
 	}
 
+	return
+}
+
+func Image2RGBA(img image.Image) (ret *image.RGBA) {
+	width := img.Bounds().Max.X
+	height := img.Bounds().Max.Y
+
+	ret = image.NewRGBA(image.Rect(0, 0, width, height))
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
+			c := img.At(i, j)
+			ret.Set(i, j, c)
+		}
+	}
 	return
 }
 
@@ -94,27 +120,13 @@ func (me *Pic) Sqrt() {
 	height := me.Bounds().Max.Y
 
 	me.sqrt = 0
-	var sum uint32 = 0
+	var sum uint64 = 0
 	for i := 0; i < width; i++ {
 		for j := 0; j < height; j++ {
-			c := me.Image.At(i, j)
-			r, g, b, a := c.RGBA()
-
-			r >>= 8
-			sum += r * r
-
-			g >>= 8
-			sum += g * g
-
-			b >>= 8
-			sum += b * b
-
-			a >>= 8
-			sum += a * a
-			//			me.sqrt += (float64(uint8(r)) * float64(uint8(r)))
-			//			me.sqrt += (float64(uint8(g)) * float64(uint8(g)))
-			//			me.sqrt += (float64(uint8(b)) * float64(uint8(b)))
-			//			me.sqrt += (float64(uint8(a)) * float64(uint8(a)))
+			sum += me.rgbas[i][j].r * me.rgbas[i][j].r
+			sum += me.rgbas[i][j].g * me.rgbas[i][j].g
+			sum += me.rgbas[i][j].b * me.rgbas[i][j].b
+			//			sum += me.rgbas[i][j].a * me.rgbas[i][j].a // 图片透明度一般不用
 		}
 	}
 	me.sqrt = math.Sqrt(float64(sum))
@@ -125,9 +137,107 @@ func (me *Pic) Resize(width, height int) (err error) {
 	return nil
 }
 
+// 把RGBA获取到，是uint8类型的，转化为uint64用来计算
+func (me *Pic) GetRGBA() {
+	width := me.Bounds().Max.X
+	height := me.Bounds().Max.Y
+
+	me.rgbas = New2DSlice(width, height)
+	for i := 0; i < width; i++ {
+		for j := 0; j < height; j++ {
+			c := me.Image.At(i, j)
+			r, g, b, a := c.RGBA()
+
+			me.rgbas[i][j].a = uint64(a >> 8)
+			me.rgbas[i][j].b = uint64(b >> 8)
+			me.rgbas[i][j].g = uint64(g >> 8)
+			me.rgbas[i][j].r = uint64(r >> 8)
+		}
+	}
+}
+
+func New2DSlice(x int, y int) (theSlice [][]rgba) {
+	theSlice = make([][]rgba, x, x)
+	for i := 0; i < x; i++ {
+		s2 := make([]rgba, y)
+		theSlice[i] = s2
+	}
+	return
+}
+
+// 在img里，查找最相似的，返回在img中的开始坐标
+// similar	如果similar大于0，找到>=similar的就可以停止
+func (me *Pic) FindSimilar(img *image.RGBA, similar float64) (retx, rety int, retSimilar float64, err error) {
+	width1 := me.Bounds().Max.X
+	height1 := me.Bounds().Max.Y
+
+	width2 := img.Bounds().Max.X
+	height2 := img.Bounds().Max.Y
+
+	if width1 > width2 {
+		err = errors.New("width1 > width2")
+		return
+	}
+
+	if height1 > height2 {
+		err = errors.New("height1 > height2")
+		return
+	}
+
+	endx := width2 - width1
+	endy := height2 - height1
+
+	// 先计算me的Sqrt
+	me.GetRGBA()
+	me.Sqrt()
+
+	tmp := new(Pic)
+	tmp.Image = img
+	tmp.GetRGBA()
+
+	var cos float64 = 0
+	// 逐个计算cos
+	var i, j int
+	for i = 0; i < endx; i++ { // 起点x
+		for j = 0; j < endy; j++ { // 起点y
+
+			var numerator uint64 = 0    // 分子
+			var denominator2 uint64 = 0 // tmp的分母
+
+			for x := 0; x < width1; x++ {
+				for y := 0; y < height1; y++ {
+					// 两两相乘
+					numerator += me.rgbas[x][y].r * tmp.rgbas[x+i][y+j].r
+					numerator += me.rgbas[x][y].g * tmp.rgbas[x+i][y+j].g
+					numerator += me.rgbas[x][y].b * tmp.rgbas[x+i][y+j].b
+
+					denominator2 += tmp.rgbas[x+i][y+j].r * tmp.rgbas[x+i][y+j].r
+					denominator2 += tmp.rgbas[x+i][y+j].g * tmp.rgbas[x+i][y+j].g
+					denominator2 += tmp.rgbas[x+i][y+j].b * tmp.rgbas[x+i][y+j].b
+				}
+			}
+			// 计算cos，并获取大的那个
+			cos = float64(numerator) / (math.Sqrt(float64(denominator2)) * me.sqrt)
+			if cos > retSimilar {
+				retSimilar = cos
+				retx = i
+				rety = j
+			}
+
+			if similar > 0 {
+				if retSimilar > similar {
+					return
+				}
+			}
+		}
+	}
+
+	return
+}
+
 // https://github.com/kbinani/screenshot
-func Screen(hwnd uint32, width, height int) (img *image.RGBA, err error) {
-	img = image.NewRGBA(image.Rect(0, 0, width, height))
+func Screen(hwnd uint32, nXSrc, nYSrc, width, height int32) (img *image.RGBA, err error) {
+	img = image.NewRGBA(image.Rect(0, 0, int(width), int(height)))
 
 	hdc := user32.GetDC(hwnd)
 	defer user32.Free()
@@ -175,7 +285,7 @@ func Screen(hwnd uint32, width, height int) (img *image.RGBA, err error) {
 	}
 	defer gdi32.SelectObject(memory_device, old)
 
-	if !gdi32.BitBlt(memory_device, 0, 0, int32(width), int32(height), hdc, 0, 0, gdi32.SRCCOPY) {
+	if !gdi32.BitBlt(memory_device, 0, 0, int32(width), int32(height), hdc, nXSrc, nYSrc, gdi32.SRCCOPY) {
 		return nil, errors.New("BitBlt failed")
 	}
 
@@ -185,8 +295,9 @@ func Screen(hwnd uint32, width, height int) (img *image.RGBA, err error) {
 
 	i := 0
 	src := uintptr(memptr)
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	var x, y int32
+	for y = 0; y < height; y++ {
+		for x = 0; x < width; x++ {
 			v0 := *(*uint8)(unsafe.Pointer(src))
 			v1 := *(*uint8)(unsafe.Pointer(src + 1))
 			v2 := *(*uint8)(unsafe.Pointer(src + 2))
