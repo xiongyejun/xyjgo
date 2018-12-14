@@ -25,16 +25,18 @@ type key struct {
 }
 
 type skey struct {
-	name string
+	name string //  ".keybd" 的文件名称
 	Keys []*key
 	k    *pressKey.Key
 	path string
 
-	CountOn   int // 设置启动的个数
+	CountOn   int // 设置启动的按键的个数，OnOff为ture的
 	bMove     bool
 	bStop     bool
-	moveValue uint16
-	moveSleep time.Duration
+	moveValue uint16 // 当前是按左或者右右
+
+	hwnd uint32
+	picPos
 }
 
 const FILE_EXT string = ".keybd"
@@ -46,6 +48,9 @@ func init() {
 	s.k = pressKey.New()
 	s.k.WindowText = "MapleStory"
 	s.path = os.Getenv("GOPATH") + `\src\github.com\xiongyejun\xyjgo\mxd\`
+
+	s.picPos = picPos{}
+	s.picname = "pos.png"
 }
 
 func main() {
@@ -185,28 +190,18 @@ func handleCommands(tokens []string) {
 		}
 
 	case "move":
-		if s.name == "" {
-			fmt.Println("move <moveSleep(秒)>-- 左右移动")
-			return
-		}
-
-		if len(tokens) != 2 {
-			fmt.Println("status <index> -- 开关")
-			return
-		}
-
-		if i, err := strconv.Atoi(tokens[1]); err != nil {
-			fmt.Println(err)
-			return
-		} else {
-			if i > 0 {
-				s.bMove = true
-				s.moveSleep = time.Duration(i) * time.Second
+		s.bMove = !s.bMove
+		if s.bMove {
+			fmt.Println("开始定位")
+			if err := s.getPos(); err != nil {
+				fmt.Println("定位失败：" + err.Error())
 			} else {
-				fmt.Println("时间必须大于0")
+				fmt.Println("定位成功")
+				fmt.Printf("%#v\r\n", s.picPos)
 			}
+		} else {
+			fmt.Println("关闭move")
 		}
-
 	case "start":
 		if len(s.Keys) == 0 {
 			fmt.Println("没有设置。")
@@ -283,23 +278,27 @@ func (me *skey) move() {
 	index := me.CountOn + 1 // 攻击和移动增加的不再s.Keys里面
 
 	for {
-		time.Sleep(me.moveSleep)
+		time.Sleep(time.Second / 3)
 
 		if me.bStop {
 			return
 		}
 
-		if s.moveValue == keyboard.VK_LEFT {
-			s.moveValue = keyboard.VK_RIGHT
+		if _, err := me.check(); err != nil {
+			fmt.Println("me.check()错误：", err.Error())
+			me.bStop = true
+			return
 		} else {
-			s.moveValue = keyboard.VK_LEFT
+			if err := s.k.Change(index, s.moveValue); err != nil {
+				s.k.Stop()
+				s.bStop = true
+				fmt.Println("s.k.Change err:", err)
+			}
+
+			// check成功可以暂停一会
+			time.Sleep(5 * time.Second)
 		}
 
-		if err := s.k.Change(index, s.moveValue); err != nil {
-			s.k.Stop()
-			s.bStop = true
-			fmt.Println("Change err:", err)
-		}
 	}
 }
 
@@ -314,7 +313,7 @@ func printCmd() {
  start -- 开始
  stop -- 结束
  status <index> -- 开关
- move <moveSleep(秒)>-- 左右移动
+ move -- 根据pos.png左右移动
  read <name> -- 读取1个设置
 `)
 	colorPrint.ReSetColor()
