@@ -278,7 +278,7 @@ func (me *skey) move() {
 	index := me.CountOn + 1 // 攻击和移动增加的不再s.Keys里面
 
 	for {
-		time.Sleep(time.Second / 3)
+		time.Sleep(1e8)
 
 		if me.bStop {
 			return

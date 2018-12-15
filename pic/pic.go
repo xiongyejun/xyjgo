@@ -187,9 +187,9 @@ func (me *Pic) FindSimilar(img *image.RGBA, similar float64) (retx, rety int, re
 	endx := width2 - width1
 	endy := height2 - height1
 
-	// 先计算me的Sqrt
-	me.GetRGBA()
-	me.Sqrt()
+	// 先计算me的Sqrt----放到调用的程序中用
+	//	me.GetRGBA()
+	//	me.Sqrt()
 
 	tmp := new(Pic)
 	tmp.Image = img

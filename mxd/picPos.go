@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	//	"fmt"
 	"image"
+	//	"time"
 
 	"github.com/xiongyejun/xyjgo/winAPI/user32/keyboard"
 
@@ -23,7 +25,7 @@ type picPos struct {
 	leftX, leftY, rightX, rightY, screenHeight, screenWidth int32
 }
 
-// 检查是否走到了边缘地带（1/3屏幕距离）
+// 检查是否走到了边缘地带（1/4屏幕距离）
 func (me *skey) check() (b bool, err error) {
 	if me.moveValue == keyboard.VK_LEFT {
 		return me.checkImg(me.leftX, me.leftY, keyboard.VK_RIGHT)
@@ -34,16 +36,23 @@ func (me *skey) check() (b bool, err error) {
 
 func (me *skey) checkImg(x, y int32, vk uint16) (b bool, err error) {
 	var img *image.RGBA
+	//	fmt.Println("开始截图", time.Now())
 	if img, err = pic.Screen(me.hwnd, x, y, me.screenWidth, me.screenHeight); err != nil {
 		return false, err
 	} else {
+		//		fmt.Println("完成截图", time.Now())
 		var retSimilar float64
+		//		fmt.Println()
+		//		fmt.Println("开始分析", time.Now())
 		if _, _, retSimilar, err = me.p.FindSimilar(img, 0.95); err != nil {
 			return false, err
 		} else {
+			//			fmt.Println("完成分析", time.Now())
 			if retSimilar >= 0.95 {
 				me.moveValue = vk
 				return true, nil
+			} else {
+				//				fmt.Println("retSimilar=", retSimilar)
 			}
 		}
 	}
@@ -66,6 +75,9 @@ func (me *skey) getPos() (err error) {
 	if me.p, err = pic.New(me.path + me.picname); err != nil {
 		return
 	} else {
+		me.p.GetRGBA()
+		me.p.Sqrt()
+
 		var retSimilar float64
 		var retY int
 		if _, retY, retSimilar, err = me.p.FindSimilar(img, 0.95); err != nil {
@@ -75,12 +87,13 @@ func (me *skey) getPos() (err error) {
 				return errors.New("retSimilar < 0.95")
 			}
 
-			me.screenHeight = int32(3 * me.p.Bounds().Dy())
-			me.screenWidth = (rect.Right - rect.Left) / 3
+			me.screenHeight = int32(me.p.Bounds().Dy() + me.p.Bounds().Dx()/2) // 多1/2个高度
+			me.screenWidth = (rect.Right - rect.Left) / 4
 			me.leftX = 0
-			me.leftY = int32(retY) + offsetY
+			me.leftY = int32(retY-me.p.Bounds().Dx()/4) + offsetY
 			me.rightY = me.leftY
-			me.rightX = (rect.Right - rect.Left) * 2 / 3
+			me.rightX = (rect.Right - rect.Left) * 3 / 4
+
 		}
 	}
 

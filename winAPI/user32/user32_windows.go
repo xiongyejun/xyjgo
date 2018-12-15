@@ -22,6 +22,7 @@ var (
 	getDC               uintptr
 	releaseDC           uintptr
 	getWindowRect       uintptr
+	getClientRect       uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -46,6 +47,7 @@ func init() {
 	getDC = win.MustGetProcAddress(lib, "GetDC")
 	releaseDC = win.MustGetProcAddress(lib, "ReleaseDC")
 	getWindowRect = win.MustGetProcAddress(lib, "GetWindowRect")
+	getClientRect = win.MustGetProcAddress(lib, "GetClientRect")
 }
 
 // INPUT Type
@@ -288,6 +290,14 @@ func GetWindowTextLength(hwnd uint32) uint32 {
 
 func GetWindowRect(hWnd uint32, rect *RECT) bool {
 	ret, _, _ := syscall.Syscall(getWindowRect, 2,
+		uintptr(hWnd),
+		uintptr(unsafe.Pointer(rect)),
+		0)
+
+	return ret != 0
+}
+func GetClientRect(hWnd uint32, rect *RECT) bool {
+	ret, _, _ := syscall.Syscall(getClientRect, 2,
 		uintptr(hWnd),
 		uintptr(unsafe.Pointer(rect)),
 		0)
