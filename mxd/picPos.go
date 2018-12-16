@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	"time"
+
 	//	"fmt"
 	"image"
-	//	"time"
 
 	"github.com/xiongyejun/xyjgo/winAPI/user32/keyboard"
 
@@ -14,7 +15,7 @@ import (
 
 // 根据图片 pos.png 来定位
 // 首先找到pos.png的开始坐标，然后不停的截图
-// 截图范围：3个pos.png的高度
+// 截图范围：2个pos.png的高度
 // 			左右分别在1/4个屏幕宽
 // 如果出现了图片pos.png，就切换方向
 // 加1个计时器，如果超过了30秒，也强制换方向
@@ -23,6 +24,8 @@ type picPos struct {
 	p                                                       *pic.Pic
 	picname                                                 string // 固定是pos.png
 	leftX, leftY, rightX, rightY, screenHeight, screenWidth int32
+
+	iTime time.Duration
 }
 
 // 检查是否走到了边缘地带（1/4屏幕距离）

@@ -120,25 +120,11 @@
 
       "WVk": 90,
 
-      "Time": 60000,
+      "Time": 61000,
 
       "Delay": 1000,
 
       "Note": "黑暗杂耍"
-
-    },
-
-    {
-
-      "OnOff": false,
-
-      "WVk": 71,
-
-      "Time": 31000,
-
-      "Delay": 1000,
-
-      "Note": "突然袭击"
 
     },
 
@@ -154,10 +140,38 @@
 
       "Note": "偷"
 
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 69,
+
+      "Time": 31000,
+
+      "Delay": 1000,
+
+      "Note": "跳跃"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 71,
+
+      "Time": 31000,
+
+      "Delay": 200,
+
+      "Note": "突然袭击"
+
     }
 
   ],
 
-  "CountOn": 10
+  "CountOn": 12
 
 }

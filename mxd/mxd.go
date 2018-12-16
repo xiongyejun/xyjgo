@@ -17,7 +17,7 @@ import (
 )
 
 type key struct {
-	OnOff bool // 开关
+	OnOff bool // 按键开关
 	WVk   uint16
 	Time  time.Duration // 间隔，毫秒
 	Delay time.Duration // 按键后延迟时间，毫秒
@@ -192,7 +192,7 @@ func handleCommands(tokens []string) {
 	case "move":
 		s.bMove = !s.bMove
 		if s.bMove {
-			fmt.Println("开始定位")
+			fmt.Println("开始定位") // 根据pos.png来定位，定位是为了获取需要截图的位置（并不需要截取整个屏幕）
 			if err := s.getPos(); err != nil {
 				fmt.Println("定位失败：" + err.Error())
 			} else {
@@ -213,6 +213,7 @@ func handleCommands(tokens []string) {
 		s.k = pressKey.New()
 		s.k.WindowText = "MapleStory"
 		s.CountOn = 0
+		// 将s.Keys转换为press.Keys
 		for i := range s.Keys {
 			if s.Keys[i].OnOff {
 				if s.Keys[i].WVk >= 'a' && s.Keys[i].WVk <= 'z' {
@@ -222,6 +223,8 @@ func handleCommands(tokens []string) {
 				s.CountOn++
 			}
 		}
+
+		// 如果启用了左右移动，就要增加供给和移动的按键
 		if s.bMove {
 			s.k.Add(keyboard.VK_1, 1000, 1000) //攻击
 			s.k.Add(s.moveValue, 1000, 1000)   // 移动
@@ -249,6 +252,7 @@ func printOnOff(b bool) string {
 	}
 }
 
+// 读取1个设置好的“.bdkey"
 func readKey(fileName string) (err error) {
 	var b []byte
 	if b, err = ioutil.ReadFile(fileName); err != nil {
@@ -262,6 +266,7 @@ func readKey(fileName string) (err error) {
 	return nil
 }
 
+// 保存“.bdkey"
 func saveKey(fileName string) (err error) {
 	var b []byte
 	if b, err = json.MarshalIndent(s, "\r\n", "  "); err != nil {
@@ -276,30 +281,59 @@ func saveKey(fileName string) (err error) {
 // 左右移动，定时切换左右按键
 func (me *skey) move() {
 	index := me.CountOn + 1 // 攻击和移动增加的不再s.Keys里面
+	me.iTime = 0
+	const SLEEP_TIME time.Duration = 1e8
 
 	for {
-		time.Sleep(1e8)
+		time.Sleep(SLEEP_TIME)
+		me.iTime++
 
 		if me.bStop {
 			return
 		}
 
-		if _, err := me.check(); err != nil {
+		if b, err := me.check(); err != nil {
 			fmt.Println("me.check()错误：", err.Error())
 			me.bStop = true
 			return
 		} else {
-			if err := s.k.Change(index, s.moveValue); err != nil {
-				s.k.Stop()
-				s.bStop = true
-				fmt.Println("s.k.Change err:", err)
-			}
+			if b { // 找到了pos.png就换按键
+				if err := me.changeMoveKey(); err != nil {
+					return
+				}
+			} else {
+				// 没有找到就判断过了多久，是否要强制换一下
+				if me.iTime > 30*(time.Second/SLEEP_TIME) {
+					if s.moveValue == keyboard.VK_LEFT {
+						s.moveValue = keyboard.VK_RIGHT
+					} else {
+						s.moveValue = keyboard.VK_LEFT
+					}
 
-			// check成功可以暂停一会
-			time.Sleep(5 * time.Second)
+					if err := me.changeMoveKey(); err != nil {
+						return
+					}
+				}
+			}
 		}
 
 	}
+}
+
+// 切换左右按键
+func (me *skey) changeMoveKey() error {
+	if err := me.k.Change(index, me.moveValue); err != nil {
+		me.k.Stop()
+		me.bStop = true
+		fmt.Println("s.k.Change err:", err)
+		return
+	}
+
+	// check成功可以暂停一会
+	time.Sleep(5 * time.Second)
+	me.iTime = 0
+
+	return nil
 }
 
 func printCmd() {
