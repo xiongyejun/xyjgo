@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -28,16 +29,18 @@ func check(e error) {
 
 func init() {
 	d = new(datas)
+	// 获取上传路径、分享路径、图片路径、音乐路径
 	d.strSep = string(os.PathSeparator)
 	d.uploadPath = os.Getenv("USERPROFILE") + d.strSep + "LVNupload" + d.strSep
 	d.sharedPath = os.Getenv("USERPROFILE") + d.strSep + "Documents" + d.strSep
 	d.imagesPath = os.Getenv("USERPROFILE") + d.strSep + "images" + d.strSep
 	d.musicPath = os.Getenv("USERPROFILE") + d.strSep + "Music" + d.strSep
-
+	// 如果上传路径、分享路径不存在就新建
 	mkDir(d.uploadPath)
 	mkDir(d.sharedPath)
 }
 
+// 新建文件夹
 func mkDir(dirName string) (err error) {
 	if _, err = os.Stat(dirName); err != nil {
 		if err = os.Mkdir(dirName, 0666); err != nil {
@@ -50,6 +53,7 @@ func mkDir(dirName string) (err error) {
 
 func main() {
 	var err error
+	// 读取要写入的html
 	if d.bHtml, err = ioutil.ReadFile(os.Getenv("GOPATH") + `\src\github.com\xiongyejun\xyjgo\lan\temp.html`); err != nil {
 		fmt.Println(err)
 		return
@@ -62,8 +66,11 @@ func main() {
 	http.Handle("/Music/", http.StripPrefix("/Music/", http.FileServer(http.Dir(d.musicPath))))
 	http.ListenAndServe(":8080", nil)
 }
+
 func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, string(d.bHtml))
+	fmt.Println("r.RemoteAddr=", r.RemoteAddr)
+
 	if r.Method == "POST" {
 		file, handler, err := r.FormFile("fileUpload") //name的字段
 		if err != nil {
@@ -71,20 +78,33 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer file.Close()
-		newFile, err := os.Create(d.uploadPath + handler.Filename)
-		check(err)
-		defer newFile.Close()
 
-		const FILE_BYTES int = 1024
+		// 保存文件
+		newFile, err := os.Create(d.uploadPath + handler.Filename)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer newFile.Close()
+		// 文件太大时候，避免卡死，固定FILE_BYTES来读取
+		const FILE_BYTES int = 1024 * 1024
 		var n int = FILE_BYTES
 		for n == FILE_BYTES {
 			b := make([]byte, FILE_BYTES)
-			n, _ = file.Read(b)
-			newFile.Write(b)
+			n, err = file.Read(b)
+			if err != nil && err != io.EOF {
+				fmt.Println(err)
+				return
+			}
+			_, err = newFile.Write(b)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
 
 		fmt.Println("upload successfully:" + d.uploadPath + handler.Filename)
-		w.Write([]byte("<br>SUCCESS"))
+		w.Write([]byte("<br>Success成功上传"))
 	}
 }
 
