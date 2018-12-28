@@ -192,9 +192,9 @@ func SendMessage(hWnd uint32, wVk uint16) (ret uint32) {
 	IParam |= (0 << 24)
 	IParam |= (1 << 29)
 
-	ret = user32.SendMessage(hWnd, user32.WM_KEYDOWN, wVk, IParam)
+	ret = user32.SendMessage(hWnd, user32.WM_KEYDOWN, uintptr(wVk), uintptr(IParam))
 	IParam |= 3 << 30
-	ret = user32.SendMessage(hWnd, user32.WM_KEYUP, wVk, IParam)
+	ret = user32.SendMessage(hWnd, user32.WM_KEYUP, uintptr(wVk), uintptr(IParam))
 
 	return
 }
