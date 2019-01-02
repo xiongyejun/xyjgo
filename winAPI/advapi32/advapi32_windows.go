@@ -43,10 +43,12 @@ const (
 	HKEY_DYN_DATA         HKEY = 0x80000006
 )
 
+type REG_TYPE uint64
+
 const (
-	REG_NONE      uint64 = 0 // No value type
-	REG_SZ               = 1 // Unicode nul terminated string
-	REG_EXPAND_SZ        = 2 // Unicode nul terminated string
+	REG_NONE      REG_TYPE = 0 // No value type
+	REG_SZ                 = 1 // Unicode nul terminated string
+	REG_EXPAND_SZ          = 2 // Unicode nul terminated string
 	// (with environment variable references)
 	REG_BINARY                     = 3 // Free form binary
 	REG_DWORD                      = 4 // 32-bit number
@@ -94,11 +96,11 @@ func RegQueryValueEx(hKey HKEY, lpValueName string, lpReserved, lpType *uint32, 
 	return int32(ret)
 }
 
-func RegEnumValue(hKey HKEY, index uint32, lpValueName string, lpcchValueName *uint32, lpReserved, lpType *uint32, lpData *byte, lpcbData *uint32) int32 {
+func RegEnumValue(hKey HKEY, index uint32, lpValueName *byte, lpcchValueName *uint32, lpReserved, lpType *uint32, lpData *byte, lpcbData *uint32) int32 {
 	ret, _, _ := syscall.Syscall9(regEnumValue, 8,
 		uintptr(hKey),
 		uintptr(index),
-		win.StrPtr(lpValueName, win.CODE_UTF16),
+		uintptr(unsafe.Pointer(lpValueName)),
 		uintptr(unsafe.Pointer(lpcchValueName)),
 		uintptr(unsafe.Pointer(lpReserved)),
 		uintptr(unsafe.Pointer(lpType)),

@@ -20,6 +20,7 @@ var (
 	writeProcessMemory uintptr
 	readProcessMemory  uintptr
 	closeHandle        uintptr
+	getLastError       uintptr
 )
 
 // GlobalAlloc flags
@@ -47,6 +48,7 @@ func init() {
 	writeProcessMemory = win.MustGetProcAddress(lib, "WriteProcessMemory")
 	readProcessMemory = win.MustGetProcAddress(lib, "ReadProcessMemory")
 	closeHandle = win.MustGetProcAddress(lib, "CloseHandle")
+	getLastError = win.MustGetProcAddress(lib, "GetLastError")
 }
 
 func GlobalAlloc(uFlags uint32, dwBytes uintptr) uint32 {
@@ -166,6 +168,15 @@ func ReadProcessMemory(hProcess uint32, lpBaseAddress uintptr, lpBuffer uintptr,
 		0)
 
 	return int32(ret)
+}
+
+func GetLastError() uint32 {
+	ret, _, _ := syscall.Syscall(getLastError, 0,
+		0,
+		0,
+		0)
+
+	return uint32(ret)
 }
 
 func Free() {
