@@ -96,7 +96,7 @@ func RegQueryValueEx(hKey HKEY, lpValueName string, lpReserved, lpType *uint32, 
 	return int32(ret)
 }
 
-func RegEnumValue(hKey HKEY, index uint32, lpValueName *byte, lpcchValueName *uint32, lpReserved, lpType *uint32, lpData *byte, lpcbData *uint32) int32 {
+func RegEnumValue(hKey HKEY, index uint32, lpValueName *uint16, lpcchValueName *uint32, lpReserved, lpType *uint32, lpData *byte, lpcbData *uint32) int32 {
 	ret, _, _ := syscall.Syscall9(regEnumValue, 8,
 		uintptr(hKey),
 		uintptr(index),

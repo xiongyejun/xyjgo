@@ -4,8 +4,8 @@ package reg
 import (
 	"errors"
 	"strconv"
+	"syscall"
 
-	"github.com/xiongyejun/xyjgo/ucs2T0utf8"
 	"github.com/xiongyejun/xyjgo/winAPI/advapi32"
 	"github.com/xiongyejun/xyjgo/winAPI/win"
 )
@@ -60,19 +60,17 @@ func (me *Reg) EnumValue() (ret []*RegValue, err error) {
 		var lpcbData uint32 = 512
 		lpData := make([]byte, lpcbData)
 
-		var lpcchValueName uint32 = 512
-		lpValueName := make([]byte, lpcchValueName)
+		var lpcchValueName uint32 = lpcbData / 2
+		lpValueName := make([]uint16, lpcchValueName)
 
 		i = advapi32.RegEnumValue(advapi32.HKEY(phkResult), icount, &lpValueName[0], &lpcchValueName, nil, &lpType, &lpData[0], &lpcbData)
 		if i > 0 {
 			return ret, errors.New(win.GetErrString(int(i)))
 		}
 		icount++
+		strlpValueName := syscall.UTF16ToString(lpValueName[:lpcchValueName])
 
-		if lpValueName, err = ucs2T0utf8.UCS2toUTF8(lpValueName[:lpcchValueName*2]); err != nil {
-			return
-		}
-		ret = append(ret, &RegValue{string(lpValueName), lpData[:lpcbData], advapi32.REG_TYPE(lpType)})
+		ret = append(ret, &RegValue{strlpValueName, lpData[:lpcbData], advapi32.REG_TYPE(lpType)})
 	}
 	return
 }
