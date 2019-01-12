@@ -181,6 +181,20 @@ func handleCommands(tokens []string) {
 			fmt.Println("退出前请保存文件：save")
 		}
 
+	case "unhidem":
+		if len(tokens) < 2 {
+			fmt.Println(`输入的命令不正确unhidem(ModuleName...) -- 取消多个隐藏模块`)
+			fmt.Printf("%d, %#v\r\n", len(tokens), tokens)
+			return
+		}
+
+		if err := of.vp.UnHideModule(tokens[1:]); err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Printf("取消隐藏模块%s成功\r\n", tokens[1:])
+			colorPrint.SetColor(colorPrint.White, colorPrint.Red)
+			fmt.Println("退出前请保存文件：save")
+		}
 	case "project":
 		if err := of.vp.UnProtectProject(); err != nil {
 			fmt.Println(err)
@@ -241,6 +255,7 @@ func printCmd() {
  smi <ModuleIndex> -- 保存模块代码为文件
  smAll -- 保存所有模块代码为文件
  hidem(ModuleName) -- 隐藏模块
+ unhidem(ModuleName...) -- 取消多个隐藏模块
  save <[saveAsFileName默认是原文件名]>-- 保存文件
  e或者q -- 退出
  `)

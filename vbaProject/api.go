@@ -61,13 +61,15 @@ func (me *VBAProject) HideModule(moduleName string) (err error) {
 }
 
 // 取消隐藏模块
-func (me *VBAProject) UnHideModule(moduleName string) (err error) {
+func (me *VBAProject) UnHideModule(moduleName []string) (err error) {
 	var index int
-	if index, err = me.checkModuleExists(moduleName); err != nil {
-		return
-	}
-	if me.Module[index].Type == CLASS_MODULE {
-		return errors.New("类模块是不能隐藏的")
+	for i := range moduleName {
+		if index, err = me.checkModuleExists(moduleName[i]); err != nil {
+			return
+		}
+		if me.Module[index].Type == CLASS_MODULE {
+			return errors.New("类模块是不能隐藏的")
+		}
 	}
 
 	// 读取PROJECT byte
@@ -76,19 +78,22 @@ func (me *VBAProject) UnHideModule(moduleName string) (err error) {
 		return
 	}
 
+	bNew := make([]byte, 0)
 	// 判断是否是被隐藏了
 	encoder := mahonia.NewEncoder("gbk")
-	bModule := []byte(encoder.ConvertString(`Module=` + moduleName))
-	bModule = append(bModule, '\r', '\n')
-	if bytes.Contains(bProject, bModule) {
-		return errors.New("模块并没有被隐藏。")
+	for i := range moduleName {
+		bModule := []byte(encoder.ConvertString(`Module=` + moduleName[i]))
+		bModule = append(bModule, '\r', '\n')
+		if bytes.Contains(bProject, bModule) {
+			return errors.New("[" + moduleName[i] + "]模块并没有被隐藏。")
+		}
+
+		bNew = append(bNew, bModule...)
 	}
 
 	// HelpFile="" 在这个前面添加 Module=moduleNameODOA
 	bOld := []byte(`HelpFile=""`)
-	bNew := make([]byte, len(bModule)+len(bOld))
-	copy(bNew[0:], bModule)
-	copy(bNew[len(bModule):], bOld)
+	bNew = append(bNew, []byte(`HelpFile=""`)...)
 
 	newByte := bytes.Replace(bProject, bOld, bNew, 1)
 	if err = me.cf.ModifyStream(me.VBA_PROJECT_CUR+`PROJECT`, newByte); err != nil {
