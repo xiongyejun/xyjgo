@@ -42,10 +42,14 @@ const (
 // 2 对于不大于0x07FF（即00000111 11111111）的，转换成两个字节
 //   转换的时候把右边的11位分别放到110xxxxx 10yyyyyy里边
 //   即0000 0aaa bbbb bbbb ==> 110a aabb   10bb bbbb
-// 3 剩下的回转换成三个字节，转换的时候也是把16个位分别填写到那三个字节里面
+// 3 剩下的会转换成三个字节，转换的时候也是把16个位分别填写到那三个字节里面
 //   即aaaaaaaa bbbbbbbb ==> 1110 aaaa 	 10aa aabb   10bb bbbb
 
 func ToUTF8(bUCS2 []byte) ([]byte, error) {
+	if bytes.HasPrefix(bUCS2, []byte{0xff, 0xfe}) {
+		bUCS2 = bUCS2[2:]
+	}
+
 	if len(bUCS2)%2 > 0 {
 		return []byte{}, errors.New("err:输入的UCS2字节数组不是偶数！")
 	}
