@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/xiongyejun/xyjgo/ucs2T0utf8"
+	"github.com/xiongyejun/xyjgo/ucs2"
 )
 
 const (
@@ -207,7 +207,7 @@ func (me *CompoundFile) getStream() (err error) {
 		me.cfs.arrStream[i] = new(cfStream)
 		// 读取name的byte
 		b := me.cfs.arrDir[i].Dir_name[:me.cfs.arrDir[i].Len_name-2]
-		b, err := ucs2T0utf8.UCS2toUTF8(b)
+		b, err := ucs2.ToUTF8(b)
 		if err != nil {
 			return err
 		}
