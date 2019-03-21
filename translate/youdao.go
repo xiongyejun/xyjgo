@@ -57,13 +57,16 @@ func (me *youDao) Translate(value string, bSpeak bool) (ret string, err error) {
 	}
 
 	if bSpeak {
-		var speakValue string = tgt
-		if (value[0] >= 'a' && value[0] <= 'z') || (value[0] >= 'A' && value[0] <= 'Z') {
-			speakValue = value
-		}
-		if err = me.speak(speakValue); err != nil {
-			fmt.Println(errors.New("speak出错：" + err.Error()))
-		}
+		go func(value string, tgt string) {
+			var speakValue string = tgt
+			if (value[0] >= 'a' && value[0] <= 'z') || (value[0] >= 'A' && value[0] <= 'Z') {
+				speakValue = value
+			}
+			if err = me.speak(speakValue); err != nil {
+				fmt.Println(errors.New("speak出错：" + err.Error()))
+			}
+		}(value, tgt)
+
 	}
 
 	return ret, nil
