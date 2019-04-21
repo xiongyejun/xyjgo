@@ -7,13 +7,14 @@ import (
 func Test_func(t *testing.T) {
 	var b ITranslate
 	var err error
-	if b, err = NewYouDao(); err != nil {
+	if b, err = NewBaiDu(); err != nil {
 		t.Error(err)
 	}
 
 	var ret string
-	if ret, err = b.Translate("Have you seen the legend of the condor heroes?", true); err != nil {
+	if ret, err = b.Translate("Have you seen the legend of the condor heroes?", false); err != nil {
 		t.Error(err)
+		return
 	} else {
 		print(ret)
 	}
