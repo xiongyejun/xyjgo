@@ -9,16 +9,25 @@ func main() {
 
 }
 
-//Hello :
+//export GetStr
+func GetStr() string {
+	return "Go string测试。haha"
+}
+
 //export Hello
 func Hello() {
 	fmt.Println("hello from golang")
 }
 
-//Sum :
 //export Sum
 func Sum(a, b int) int {
 	return a + b
+}
+
+//export TestPInt
+func TestPInt(a, b *int) *int {
+	var c int = *a + *b
+	return &c
 }
 
 // 原文：https://studygolang.com/articles/19000#reply0

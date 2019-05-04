@@ -1,0 +1,1 @@
+C:\mingw32\MinGW\bin\gcc.exe go.def go.a -shared -lwinmm -lWs2_32 -o go.dll -Wl,--out-implib,go.lib
