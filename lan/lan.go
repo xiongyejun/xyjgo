@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"os"
@@ -72,39 +73,44 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("r.RemoteAddr=", r.RemoteAddr)
 
 	if r.Method == "POST" {
-		file, handler, err := r.FormFile("fileUpload") //name的字段
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer file.Close()
-
-		// 保存文件
-		newFile, err := os.Create(d.uploadPath + handler.Filename)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		defer newFile.Close()
-		// 文件太大时候，避免卡死，固定FILE_BYTES来读取
-		const FILE_BYTES int = 1024 * 1024
-		var n int = FILE_BYTES
-		for n == FILE_BYTES {
-			b := make([]byte, FILE_BYTES)
-			n, err = file.Read(b)
-			if err != nil && err != io.EOF {
-				fmt.Println(err)
-				return
-			}
-			_, err = newFile.Write(b)
+		if r.URL.String() == "/inputvalue.ashx" {
+			fmt.Printf("%#v\r\n", r.PostForm)
+		} else {
+			file, handler, err := r.FormFile("fileUpload") //name的字段
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
+			defer file.Close()
+
+			// 保存文件
+			newFile, err := os.Create(d.uploadPath + handler.Filename)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			defer newFile.Close()
+			// 文件太大时候，避免卡死，固定FILE_BYTES来读取
+			const FILE_BYTES int = 1024 * 1024
+			var n int = FILE_BYTES
+			for n == FILE_BYTES {
+				b := make([]byte, FILE_BYTES)
+				n, err = file.Read(b)
+				if err != nil && err != io.EOF {
+					fmt.Println(err)
+					return
+				}
+				_, err = newFile.Write(b)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+			}
+
+			fmt.Println("upload successfully:" + d.uploadPath + handler.Filename)
+			w.Write([]byte("<br>Success成功上传"))
 		}
 
-		fmt.Println("upload successfully:" + d.uploadPath + handler.Filename)
-		w.Write([]byte("<br>Success成功上传"))
 	}
 }
 
@@ -118,8 +124,51 @@ func showip() {
 		// 检查ip地址判断是否回环地址
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				fmt.Println(ipnet.IP.String() + ":8080")
+				fmt.Printf("IP:%s 子网掩码:%s\n", ipnet.IP.String()+":8080", ipnet.Mask)
+			}
+
+			if ipnet.IP.String() == "192.168.1.5" {
+				tmp := Table(ipnet)
+				for i := range tmp {
+					fmt.Println(i, tmp[i])
+				}
 			}
 		}
 	}
+}
+
+// https://studygolang.com/articles/11517
+// 算出内网IP范围
+type IP uint32
+
+func Table(ipnet *net.IPNet) (ret []net.IP) {
+	ip := ipnet.IP.To4()
+	fmt.Println("本机ip:", ip)
+	var min, max IP
+	for i := 0; i < 4; i++ {
+		b := IP(ip[i] & ipnet.Mask[i])
+		min += b << ((3 - uint(i)) * 8)
+	}
+	one, _ := ipnet.Mask.Size()
+	max = min | IP(math.Pow(2, float64(32-one))-1)
+	fmt.Printf("内网IP范围：%d --- %d\n", min, max)
+	// max 是广播地址
+	// i & 0x0000 00ff ==0  是为段位0的ip，根据RFC的规定，忽略
+	for i := min; i < max; i++ {
+		if i&0x000000ff == 0 {
+			continue
+		}
+		ret = append(ret, UInt32ToIP(i))
+	}
+	return
+}
+
+func UInt32ToIP(intIP IP) net.IP {
+	var bytes [4]byte
+	bytes[0] = byte(intIP & 0xFF)
+	bytes[1] = byte((intIP >> 8) & 0xFF)
+	bytes[2] = byte((intIP >> 16) & 0xFF)
+	bytes[3] = byte((intIP >> 24) & 0xFF)
+
+	return net.IPv4(bytes[3], bytes[2], bytes[1], bytes[0])
 }

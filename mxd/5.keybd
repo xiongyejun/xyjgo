@@ -1,0 +1,51 @@
+{
+
+  "Keys": [
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 52,
+
+      "Time": 179000,
+
+      "Delay": 1000,
+
+      "Note": "轻功"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 53,
+
+      "Time": 179000,
+
+      "Delay": 1000,
+
+      "Note": "快速"
+
+    },
+
+    {
+
+      "OnOff": true,
+
+      "WVk": 51,
+
+      "Time": 179000,
+
+      "Delay": 1000,
+
+      "Note": "黑暗"
+
+    }
+
+  ],
+
+  "CountOn": 3
+
+}

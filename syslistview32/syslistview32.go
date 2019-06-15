@@ -3,9 +3,6 @@ package syslistview32
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"os"
-	"syscall"
 	"unsafe"
 
 	"github.com/xiongyejun/xyjgo/winAPI/user32"
@@ -13,6 +10,12 @@ import (
 	"github.com/axgle/mahonia"
 	"github.com/xiongyejun/xyjgo/winAPI/kernel32"
 )
+
+type WinStruct struct {
+	ClassName       string
+	WindowName      string
+	ChildAfterIndex int // 是第几个子窗口（0开始），有时候会有多个相同ClassName的
+}
 
 type ListView32 struct {
 	hwndFolder   uint32 // CabinetWClass
@@ -41,7 +44,7 @@ type iItemStruct struct {
 	iGroup   int32
 }
 
-func NewListView32(hwndFolder uint32) (l *ListView32, err error) {
+func NewListView32(hwndFolder uint32, wins []*WinStruct) (l *ListView32, err error) {
 	l = new(ListView32)
 
 	if hwndFolder == 0 {
@@ -49,21 +52,46 @@ func NewListView32(hwndFolder uint32) (l *ListView32, err error) {
 	}
 	l.hwndFolder = hwndFolder
 
-	if l.hwndListView, err = FindWindowEx(l.hwndFolder, []string{"SHELLDLL_DefView",
-		"DUIViewWndClassName",
-		"DirectUIHWND",
-		"CtrlNotifySink",
-		"SysListView32"}); err != nil {
+	if l.hwndListView, err = FindWindowEx(l.hwndFolder, wins); err != nil {
 		return
 	}
 	return
 }
 
-func FindWindowEx(hwndParent uint32, wins []string) (ret uint32, err error) {
+func GetWin7WinStruct() (wins []*WinStruct) {
+	return []*WinStruct{
+		&WinStruct{"ShellTabWindowClass", "", 0},
+		&WinStruct{"DUIViewWndClassName", "", 0},
+		&WinStruct{"DirectUIHWND", "", 0},
+		&WinStruct{"CtrlNotifySink", "", 2},
+		&WinStruct{"SHELLDLL_DefView", "", 0},
+		&WinStruct{"DirectUIHWND", "", 0},
+	}
+}
+func GetXPWinStruct() (wins []*WinStruct) {
+	return []*WinStruct{
+		&WinStruct{"SHELLDLL_DefView", "", 0},
+		&WinStruct{"DUIViewWndClassName", "", 0},
+		&WinStruct{"DirectUIHWND", "", 0},
+		&WinStruct{"CtrlNotifySink", "", 0},
+		&WinStruct{"SysListView32", "", 0},
+	}
+}
+func FindWindowEx(hwndParent uint32, wins []*WinStruct) (ret uint32, err error) {
+	var tmphwnd uint32 = 0
+
 	for i := range wins {
-		if hwndParent = user32.FindWindowEx(hwndParent, 0, wins[i], ""); 0 == hwndParent {
-			return 0, errors.New("没有找到SHELLDLL_DefView窗口")
+		if tmphwnd = user32.FindWindowEx(hwndParent, 0, wins[i].ClassName, wins[i].WindowName); 0 == tmphwnd {
+			return 0, errors.New("没有找到" + wins[i].ClassName + "窗口")
 		}
+
+		for j := 0; j < wins[i].ChildAfterIndex; j++ {
+			if tmphwnd = user32.FindWindowEx(hwndParent, tmphwnd, wins[i].ClassName, wins[i].WindowName); 0 == tmphwnd {
+				return 0, errors.New("没有找到" + wins[i].ClassName + "窗口")
+			}
+		}
+
+		hwndParent = tmphwnd
 	}
 	return hwndParent, nil
 }
@@ -87,27 +115,27 @@ const (
 	MEM_RELEASE    = 0x8000
 )
 
-func (me *ListView32) GetFolderPath() (ret string, err error) {
-	var hwndPath uint32
-	if hwndPath, err = FindWindowEx(me.hwndFolder, []string{
-		"WorkerW",
-		"ReBarWindow32",
-		"ComboBoxEx32"}); err != nil {
-		return
-	}
-	fmt.Printf("%x\r\n", hwndPath)
-	iLen := user32.SendMessage(hwndPath, user32.WM_GETTEXTLENGTH, 0, 0) + 1
-	if iLen == 1 {
-		return "", errors.New("标题获取出错")
-	}
-	buf := make([]uint16, iLen)
-	user32.SendMessage(hwndPath, user32.WM_GETTEXT, uintptr(iLen), uintptr(unsafe.Pointer(&buf[0])))
-	ret = syscall.UTF16ToString(buf)
-	if ret == "我的文档" {
-		ret = os.Getenv("USERPROFILE") + `\My Documents`
-	}
-	return
-}
+//func (me *ListView32) GetFolderPath() (ret string, err error) {
+//	var hwndPath uint32
+//	if hwndPath, err = FindWindowEx(me.hwndFolder, []string{
+//		"WorkerW",
+//		"ReBarWindow32",
+//		"ComboBoxEx32"}); err != nil {
+//		return
+//	}
+//	fmt.Printf("%x\r\n", hwndPath)
+//	iLen := user32.SendMessage(hwndPath, user32.WM_GETTEXTLENGTH, 0, 0) + 1
+//	if iLen == 1 {
+//		return "", errors.New("标题获取出错")
+//	}
+//	buf := make([]uint16, iLen)
+//	user32.SendMessage(hwndPath, user32.WM_GETTEXT, uintptr(iLen), uintptr(unsafe.Pointer(&buf[0])))
+//	ret = syscall.UTF16ToString(buf)
+//	if ret == "我的文档" {
+//		ret = os.Getenv("USERPROFILE") + `\My Documents`
+//	}
+//	return
+//}
 
 func (me *ListView32) GetItemsCount() int {
 	return int(user32.SendMessage(me.hwndListView, LVM_GETITEMCOUNT, 0, 0))

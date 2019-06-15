@@ -238,17 +238,27 @@ func (me *Pic) FindSimilar(img *image.RGBA, similar float64) (retx, rety int, re
 // https://github.com/kbinani/screenshot
 func Screen(hwnd uint32, nXSrc, nYSrc, width, height int32) (img *image.RGBA, err error) {
 	img = image.NewRGBA(image.Rect(0, 0, int(width), int(height)))
+	var errCount int = 0
 
+restart:
 	hdc := user32.GetDC(hwnd)
 	defer user32.Free()
 
 	if hdc == 0 {
+		errCount++
+		if errCount < 3 {
+			goto restart
+		}
 		return nil, errors.New("GetDC failed")
 	}
 	defer user32.ReleaseDC(hwnd, hdc)
 
 	memory_device := gdi32.CreateCompatibleDC(hdc)
 	if memory_device == 0 {
+		errCount++
+		if errCount < 3 {
+			goto restart
+		}
 		return nil, errors.New("CreateCompatibleDC failed")
 	}
 	defer gdi32.Free()
@@ -256,6 +266,10 @@ func Screen(hwnd uint32, nXSrc, nYSrc, width, height int32) (img *image.RGBA, er
 
 	bitmap := gdi32.CreateCompatibleBitmap(hdc, int32(width), int32(height))
 	if bitmap == 0 {
+		errCount++
+		if errCount < 3 {
+			goto restart
+		}
 		return nil, errors.New("CreateCompatibleBitmap failed")
 	}
 	defer gdi32.DeleteDC(bitmap)
@@ -281,15 +295,27 @@ func Screen(hwnd uint32, nXSrc, nYSrc, width, height int32) (img *image.RGBA, er
 
 	old := gdi32.SelectObject(memory_device, bitmap)
 	if old == 0 {
+		errCount++
+		if errCount < 3 {
+			goto restart
+		}
 		return nil, errors.New("SelectObject failed")
 	}
 	defer gdi32.SelectObject(memory_device, old)
 
 	if !gdi32.BitBlt(memory_device, 0, 0, int32(width), int32(height), hdc, nXSrc, nYSrc, gdi32.SRCCOPY) {
+		errCount++
+		if errCount < 3 {
+			goto restart
+		}
 		return nil, errors.New("BitBlt failed")
 	}
 
 	if gdi32.GetDIBits(hdc, bitmap, 0, uint32(height), (*uint8)(memptr), (*gdi32.BITMAPINFO)(unsafe.Pointer(&header)), gdi32.DIB_RGB_COLORS) == 0 {
+		errCount++
+		if errCount < 3 {
+			goto restart
+		}
 		return nil, errors.New("GetDIBits failed")
 	}
 

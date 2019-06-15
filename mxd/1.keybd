@@ -130,21 +130,7 @@
 
     {
 
-      "OnOff": true,
-
-      "WVk": 65,
-
-      "Time": 10000,
-
-      "Delay": 300,
-
-      "Note": "偷"
-
-    },
-
-    {
-
-      "OnOff": true,
+      "OnOff": false,
 
       "WVk": 69,
 
@@ -158,7 +144,7 @@
 
     {
 
-      "OnOff": true,
+      "OnOff": false,
 
       "WVk": 71,
 
@@ -172,6 +158,6 @@
 
   ],
 
-  "CountOn": 12
+  "CountOn": 9
 
 }
