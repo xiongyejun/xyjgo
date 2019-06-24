@@ -13,8 +13,9 @@ import (
 	"hash"
 	"io/ioutil"
 	"os"
-	"pkgMyPkg/colorPrint"
 	"strings"
+
+	"github.com/xiongyejun/xyjgo/colorPrint"
 )
 
 func main() {
@@ -72,7 +73,7 @@ func main() {
 			} else {
 				colorPrint.SetColor(colorPrint.White, colorPrint.Red)
 				fmt.Println("!!!与输入的hash值不一致。")
-				colorPrint.UnSetColor()
+				colorPrint.ReSetColor()
 			}
 		}
 	}
