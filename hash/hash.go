@@ -54,6 +54,7 @@ func main() {
 		bSrc = []byte(src)
 		print("文本")
 	} else {
+		// 如果文件过大，容易卡死，应该分开读取
 		if bSrc, err = ioutil.ReadFile(src); err != nil {
 			fmt.Println(err)
 		} else {

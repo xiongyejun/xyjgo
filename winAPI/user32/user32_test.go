@@ -2,17 +2,19 @@ package user32
 
 import (
 	"testing"
+	"time"
 )
 
 func Test_func(t *testing.T) {
 	defer Free()
 
-	hwnd := FindWindow("", "1.txt - 记事本")
-	t.Log(hwnd)
+	var i int = 0
+	for i < 10 {
+		time.Sleep(2 * time.Second)
+		hwnd := GetActiveWindow()
+		t.Log(hwnd)
+		t.Log(GetWindowText(hwnd))
+		i++
+	}
 
-	hdc := GetDC(hwnd)
-	t.Log(hdc)
-
-	ret := ReleaseDC(hwnd, hdc)
-	t.Log(ret)
 }

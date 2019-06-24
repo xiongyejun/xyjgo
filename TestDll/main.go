@@ -3,6 +3,7 @@ package main
 import (
 	"C"
 	"fmt"
+	"unsafe"
 )
 
 func main() {
@@ -19,6 +20,11 @@ func Hello() {
 	fmt.Println("hello from golang")
 }
 
+//export OneInt
+func OneInt(a int) int {
+	return a + 1
+}
+
 //export Sum
 func Sum(a, b int) int {
 	return a + b
@@ -28,6 +34,15 @@ func Sum(a, b int) int {
 func TestPInt(a, b *int) *int {
 	var c int = *a + *b
 	return &c
+}
+
+//export TestPtr
+func TestPtr(pa, pb uintptr) uintptr {
+	var a int = *(*int)(unsafe.Pointer(pa))
+	var b int = *(*int)(unsafe.Pointer(pa))
+
+	var c int = a + b
+	return uintptr(unsafe.Pointer(&c))
 }
 
 // 原文：https://studygolang.com/articles/19000#reply0

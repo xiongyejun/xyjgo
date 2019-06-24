@@ -298,7 +298,7 @@ func (me *skey) move() {
 			return
 		} else {
 			if b { // 找到了pos.png就换按键
-				if err := me.changeMoveKey(); err != nil {
+				if err := me.changeMoveKey(index); err != nil {
 					return
 				}
 			} else {
@@ -310,7 +310,7 @@ func (me *skey) move() {
 						s.moveValue = keyboard.VK_LEFT
 					}
 
-					if err := me.changeMoveKey(); err != nil {
+					if err := me.changeMoveKey(index); err != nil {
 						return
 					}
 				}
@@ -321,12 +321,12 @@ func (me *skey) move() {
 }
 
 // 切换左右按键
-func (me *skey) changeMoveKey() error {
+func (me *skey) changeMoveKey(index int) error {
 	if err := me.k.Change(index, me.moveValue); err != nil {
 		me.k.Stop()
 		me.bStop = true
 		fmt.Println("s.k.Change err:", err)
-		return
+		return err
 	}
 
 	// check成功可以暂停一会

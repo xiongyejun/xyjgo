@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/xiongyejun/xyjgo/ucs2T0utf8"
+	"github.com/xiongyejun/xyjgo/ucs2"
 )
 
 type dirInfo struct {
@@ -126,7 +126,7 @@ func GetModuleInfo(dirStream []byte) (arrDirInfo []dirInfo, err error) {
 		byte2struct(dirStream[pDirStream:], &module_NameUnicode)
 		pDirStream += int32(binary.Size(module_NameUnicode))
 		bName := dirStream[pDirStream : pDirStream+module_NameUnicode.SizeOfModuleNameUnicode]
-		bName, _ = ucs2T0utf8.UCS2toUTF8(bName)
+		bName, _ = ucs2.ToUTF8(bName)
 		pDirStream += module_NameUnicode.SizeOfModuleNameUnicode
 		arrDirInfo[i].Name = string(bName)
 

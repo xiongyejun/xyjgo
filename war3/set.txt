@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "庞统",
+    "Hooks": [
+      {
+        "HookKey": "2",
+        "Do": [
+          "2",
+          "MouseClick",
+          "3"
+        ]
+      }	
+    ]
+  }
+
+
+]qwe1qwqqqqqq
