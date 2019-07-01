@@ -10,6 +10,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/lxn/walk"
 )
 
 const (
@@ -67,12 +69,14 @@ type datas struct {
 	ts *txtSrc
 	td *txtDes
 
-	strDir string
-	files  []string
-	cLine  chan []byte
+	strDir  string
+	saveDir string
+	files   []string
+	cLine   chan []byte
 }
 
 var d *datas
+var strSep string = string(os.PathSeparator)
 
 func init() {
 	d = new(datas)
@@ -87,23 +91,55 @@ func init() {
 var bSEP []byte = []byte("|")
 
 func main() {
-	//	var err error
 
-	//	for i := range d.files {
+	d.strDir = selectFolder("请选择需要转换的txt文件所在文件夹。")
+	if d.strDir == "" {
+		return
+	}
+	fmt.Println("txt文件所在文件夹:", d.strDir)
 
-	//	}
+	d.saveDir = selectFolder("请选择转换后txt文件保存的文件夹。")
+	if d.saveDir == "" {
+		return
+	}
+	fmt.Println("转换后txt文件保存:", d.saveDir)
 
+	defer pause()
+	if d.strDir == d.saveDir {
+		fmt.Println("不能是同1个文件夹。")
+		return
+	}
+
+	if err := d.getFiels(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for i := range d.files {
+		if err := d.getResult(i); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+}
+
+func selectFolder(strTitle string) string {
+	//	initPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	fd := walk.FileDialog{Title: strTitle}
+	if b, _ := fd.ShowBrowseFolder(nil); b {
+		return fd.FilePath
+	}
+	return ""
 }
 
 func (me *datas) getResult(i int) (err error) {
 
-	if d.ts.f, err = os.Open(me.files[i]); err != nil {
+	if d.ts.f, err = os.Open(d.strDir + strSep + me.files[i]); err != nil {
 		return
 	}
 	defer d.ts.f.Close()
 
-	os.Mkdir(me.strDir+"/conv/", os.ModeDir)
-	if d.td.f, err = os.OpenFile("conv/"+me.files[i], os.O_CREATE, os.ModeAppend); err != nil {
+	if d.td.f, err = os.OpenFile(d.saveDir+strSep+me.files[i], os.O_CREATE, os.ModeAppend); err != nil {
 		return
 	}
 	defer d.td.f.Close()
@@ -140,13 +176,14 @@ func (me *datas) getResult(i int) (err error) {
 		arrSrc := bytes.Split(ret[i], bSEP)
 		var arrDes [][]byte = make([][]byte, des备注+1)
 		// 转换
-		arrDes[des账号] = retzh[0][1]
+		arrDes[des账号] = retzh[0][1] // 同1个txt，账号是一样的
 		arrDes[des日期] = arrSrc[src记账日]
 		arrDes[des起始日] = arrSrc[src起息日]
 		arrDes[des备注] = arrSrc[src摘要]
-		// 判断金额是在借方还是贷方（看一下最后1个字符是不是空白）
+		// 判断金额是在借方还是贷方（看一下最后1个字符是不是空白），借方加-
 		if arrSrc[src金额_借][len(arrSrc[src金额_借])-1] != 0x20 {
 			arrDes[des交易金额] = arrSrc[src金额_借]
+			arrDes[des交易金额] = append([]byte("-"), arrDes[des交易金额]...)
 		} else {
 			arrDes[des交易金额] = arrSrc[src金额_贷]
 		}
@@ -154,59 +191,7 @@ func (me *datas) getResult(i int) (err error) {
 			return
 		}
 	}
-	return
 
-	//	bf := bufio.NewReader(me.ts.f)
-	//	var arrDes [][]byte = make([][]byte, des备注+1)
-	//	var arrSrc [][]byte
-	//	var bWrite bool = false
-	//	for {
-	//		var b []byte
-	//		b, _, err = bf.ReadLine()
-	//		if err == io.EOF {
-	//			break
-	//		}
-
-	//		if b[0] == 0x20 && b[1] == 0x7c && b[2] == 0x20 { // " | "
-	//			fmt.Printf("%s\r\n", b)
-	//			if b[3] == 0x20 {
-	//				// 还是属于上面一行的内容，一般是摘要列写不下
-	//				arrSrc = bytes.Split(b[:len(b)-1], bSEP)
-	//				arrDes[des备注] = append(arrDes[des备注], arrSrc[src摘要]...)
-	//			} else {
-	//				if bWrite {
-	//					bWrite = false
-	//					if err = d.td.writeIn(arrDes); err != nil {
-	//						return
-	//					}
-	//				}
-	//				arrSrc = bytes.Split(b, bSEP)
-	//				// 转换
-	//				arrDes[des账号] = []byte("xxxxx")
-	//				arrDes[des日期] = arrSrc[src记账日]
-	//				arrDes[des起始日] = arrSrc[src起息日]
-	//				arrDes[des备注] = arrSrc[src摘要]
-	//				// 判断金额是在借方还是贷方（看一下最后1个字符是不是空白）
-	//				if arrSrc[src金额_借][len(arrSrc[src金额_借])-1] != 0x20 {
-	//					arrDes[des交易金额] = arrSrc[src金额_借]
-	//				} else {
-	//					arrDes[des交易金额] = arrSrc[src金额_贷]
-	//				}
-	//				bWrite = true
-	//			}
-	//		} else {
-	//			if bWrite {
-	//				bWrite = false
-	//				if err = d.td.writeIn(arrDes); err != nil {
-	//					return
-	//				}
-	//			}
-
-	//		}
-
-	//	}
-
-	fmt.Println("getResult")
 	return nil
 }
 
@@ -248,4 +233,11 @@ func (me *datas) getFiels() (err error) {
 	}
 
 	return nil
+}
+
+func pause() {
+	fmt.Println("ok...")
+
+	var c string
+	fmt.Scan(&c)
 }
