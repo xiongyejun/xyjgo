@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	// "path/filepath"
 
 	"github.com/lxn/walk"
 )
@@ -115,6 +116,7 @@ func main() {
 		return
 	}
 
+	fmt.Printf("共有txt文件%d个\r\n", len(d.files))
 	for i := range d.files {
 		if err := d.getResult(i); err != nil {
 			fmt.Println(err)
@@ -124,8 +126,8 @@ func main() {
 }
 
 func selectFolder(strTitle string) string {
-	//	initPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	fd := walk.FileDialog{Title: strTitle}
+	// initPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	fd := walk.FileDialog{Title: strTitle} //,InitialDirPath:initPath}
 	if b, _ := fd.ShowBrowseFolder(nil); b {
 		return fd.FilePath
 	}
@@ -139,6 +141,7 @@ func (me *datas) getResult(i int) (err error) {
 	}
 	defer d.ts.f.Close()
 
+	os.Remove(d.saveDir + strSep + me.files[i])
 	if d.td.f, err = os.OpenFile(d.saveDir+strSep+me.files[i], os.O_CREATE, os.ModeAppend); err != nil {
 		return
 	}
@@ -182,7 +185,7 @@ func (me *datas) getResult(i int) (err error) {
 		arrDes[des备注] = arrSrc[src摘要]
 		// 判断金额是在借方还是贷方（看一下最后1个字符是不是空白），借方加-
 		if arrSrc[src金额_借][len(arrSrc[src金额_借])-1] != 0x20 {
-			arrDes[des交易金额] = arrSrc[src金额_借]
+			arrDes[des交易金额]= bytes.Replace(arrSrc[src金额_借],[]byte{0x20}, nil, -1) 
 			arrDes[des交易金额] = append([]byte("-"), arrDes[des交易金额]...)
 		} else {
 			arrDes[des交易金额] = arrSrc[src金额_贷]
@@ -192,6 +195,7 @@ func (me *datas) getResult(i int) (err error) {
 		}
 	}
 
+	fmt.Printf("处理完成第%3d个：%s\r\n", i+1, d.files[i])
 	return nil
 }
 
@@ -200,13 +204,13 @@ func (me *txtDes) writeIn(b [][]byte) (err error) {
 	b[des账号] = append([]byte{0x0d, 0x0a}, b[des账号]...)
 	b[des日期] = append(b[des日期], []byte("                           ")...)
 	b[des日期] = append([]byte("20"), b[des日期]...)
+	b[des起始日] = append([]byte("20"), b[des起始日]...)
 
 	// 交易金额是右对齐
 	var nSpace int = len("          11621.35") - len(b[des交易金额])
 	if nSpace > 0 {
 		b[des起始日] = append(b[des起始日], []byte(strings.Repeat(" ", nSpace))...)
 	}
-	b[des起始日] = append([]byte("20"), b[des起始日]...)
 
 	b[des交易金额] = append(b[des交易金额], []byte("   ")...)
 
