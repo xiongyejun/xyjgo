@@ -22,6 +22,7 @@ func (me *PDF) Parse() (err error) {
 //PDF解析流程：
 //a）从trailer中找到Root关键字，Root是指向Catalog字典，Catalog是一个PDF文件的总入口，它包含Page tree，Outline hierarchy等。
 func (me *PDF) getTrailer() (err error) {
+	// trailer 说明文件尾trailer对象的开始
 	rootIndex := bytes.Index(me.Src, []byte("trailer"))
 
 	if rootIndex == -1 {
@@ -29,19 +30,36 @@ func (me *PDF) getTrailer() (err error) {
 	}
 
 	b := me.Src[rootIndex:]
-
+	// /Root # # R说明根对象的对象号为#
 	if me.RootR, err = findR(b, "Root"); err != nil {
 		return
 	}
+
+	// Startxref
+	// ### 说明交叉引用表的偏移地址
+
+	// xref 交叉引用表
+	// #1 #2 说明下面各行所描述的对象号是从#1开始，并且有#2个对象
+	// 0000000000 65535 f 一般每个PDF文件都是以这一行开始交叉应用表的，说明对象0的起始地址为0000000000，产生号（generation number）为65535，也是最大产生号，不可以再进行更改，而且最后对象的表示是f,表明该对象为free, 这里，大家可以看到，其实这个对象可以看作是文件头
+	// …………
+	// 0000000322 00000 n  对象n的偏移地址为322
+	// …………
 	return nil
 }
 
-// 用正则获取
+// 用正则获取对象
+// ------------------------------------
 // # # obj
 // ...
 // endobj
+// ------------------------------------
+// 第一个数字#称为对象号，来唯一标识一个对象的
+// 第二个#是产生号，是来表明它在被创建后的第几次修改
+// 所有新创建的PDF文件的对象号应该都是0，即第一次被创建以后没有被修改过
 func (me *PDF) getObj() (err error) {
 	var re *regexp.Regexp
+	// (?标记)               在组内设置标记，非捕获，标记影响当前组后的正则表达式
+	// s              让 . 匹配 \n (默认为 false)
 	var expr string = `(?s)(\d{1,}) \d{1,} obj.*?<<(.*?)>>.*?endobj`
 	if re, err = regexp.Compile(expr); err != nil {
 		return
@@ -54,10 +72,10 @@ func (me *PDF) getObj() (err error) {
 	me.objs = make([]obj, len(objs))
 	me.mObj = make(map[string]int, len(objs))
 	for i := range objs {
-		me.objs[i].strIndex = string(objs[i][1])
-		me.mObj[me.objs[i].strIndex] = i
-		me.objs[i].b = objs[i][0]
-		me.objs[i].indexSrc = indexs[i][0]
+		me.objs[i].strIndex = string(objs[i][1]) // 记录对象号
+		me.mObj[me.objs[i].strIndex] = i         // 记录到map中，key是对象号
+		me.objs[i].b = objs[i][0]                // 对象的byte（在<< 和>>之间的）
+		me.objs[i].indexSrc = indexs[i][0]       // 对象的byte在src中出现的位置
 	}
 	return
 }

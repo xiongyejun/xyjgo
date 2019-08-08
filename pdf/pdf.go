@@ -1,4 +1,5 @@
 // Portable Document Format的简称，意为“便携式文档格式”
+// https://www.jianshu.com/p/51eb811ba935
 package pdf
 
 import (
@@ -7,14 +8,6 @@ import (
 
 	"github.com/xiongyejun/xyjgo/fileHeader"
 )
-
-// https://blog.csdn.net/P876643136/article/details/79449060
-
-// https://blog.csdn.net/lzfly/article/details/80626865
-// 交叉引用表
-// 为了能对间接对象进行随机存取而设立的一个间接对象的地址索引表。（实际以偏移+索引的方式储存对象地址）
-type CrossReferenceTable struct {
-}
 
 type obj struct {
 	strIndex string // obj # 0
@@ -31,9 +24,6 @@ type PDF struct {
 
 	CountPage int
 }
-
-// PDF对象
-// https://blog.csdn.net/mouday/article/details/85048495
 
 func New(FilePath string) (p *PDF, err error) {
 	p = new(PDF)
