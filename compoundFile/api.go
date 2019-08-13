@@ -36,8 +36,8 @@ func (me *CompoundFile) ModifyStream(streamPath string, newByte []byte) (err err
 
 	// 修改dir中的Stream_size
 	//	// b中实际仅有me.cfs.arrDir[streamIndex].Stream_size的大小，但是为了上面循环方便按照step复制，在这里来扣除多余的
-	//	iSub := int32(len(oldByte)) - me.cfs.arrDir[streamIndex].Stream_size
-	var iLen int32 = int32(len(newByte)) //- iSub
+	iSub := int32(len(oldByte)) - me.cfs.arrDir[streamIndex].Stream_size
+	var iLen int32 = int32(len(newByte)) - iSub
 	// int32转byte
 	buf := bytes.NewBuffer([]byte{})
 	binary.Write(buf, binary.LittleEndian, &iLen)

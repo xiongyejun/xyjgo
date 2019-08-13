@@ -123,8 +123,11 @@ func (me *VBAProject) UnProtectProject() (err error) {
 	pattern := `CMG="[A-Z\d]+"\r\n|DPB="[A-Z\d]+"\r\n|GC="[A-Z\d]+"\r\n`
 
 	var bMatch bool
-	if bMatch, err = regexp.Match(pattern, bProject); !bMatch {
+	if bMatch, err = regexp.Match(pattern, bProject); err != nil {
 		return
+	}
+	if !bMatch {
+		return errors.New("没有设置vba工程密码。")
 	}
 
 	var reg *regexp.Regexp
@@ -133,6 +136,9 @@ func (me *VBAProject) UnProtectProject() (err error) {
 	}
 	// 替换后的byte
 	newByte := reg.ReplaceAll(bProject, []byte{})
+	print(string(bProject))
+	print("\r\n\r\nnewbyte:")
+	print(string(newByte))
 	if err = me.cf.ModifyStream(me.VBA_PROJECT_CUR+`PROJECT`, newByte); err != nil {
 		return
 	}

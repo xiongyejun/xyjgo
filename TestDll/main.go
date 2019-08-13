@@ -36,6 +36,12 @@ func TestPInt(a, b *int) *int {
 	return &c
 }
 
+//export TestPInt32
+func TestPInt32(a, b *int32) *int32 {
+	var c int32 = *a + *b
+	return &c
+}
+
 //export TestPtr
 func TestPtr(pa, pb uintptr) uintptr {
 	var a int = *(*int)(unsafe.Pointer(pa))

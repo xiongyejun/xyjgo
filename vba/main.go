@@ -200,6 +200,9 @@ func handleCommands(tokens []string) {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("project密码取消成功。")
+		colorPrint.SetColor(colorPrint.White, colorPrint.Red)
+		fmt.Println("退出前请保存文件：save")
 
 	case "save":
 		var oldFileName string = of.fileName

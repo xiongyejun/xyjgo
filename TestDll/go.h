@@ -79,6 +79,8 @@ extern GoInt Sum(GoInt p0, GoInt p1);
 
 extern GoInt* TestPInt(GoInt* p0, GoInt* p1);
 
+extern GoInt32* TestPInt32(GoInt32* p0, GoInt32* p1);
+
 extern GoUintptr TestPtr(GoUintptr p0, GoUintptr p1);
 
 #ifdef __cplusplus

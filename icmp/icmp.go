@@ -36,8 +36,8 @@ type ICMP struct {
 
 func main() {
 	var icmp *ICMP = new(ICMP)
-	laddr := net.IPAddr{IP: net.ParseIP("192.168.1.6")}
-	raddr := net.IPAddr{IP: net.ParseIP("192.168.1.1")}
+	laddr := net.IPAddr{IP: net.ParseIP("192.168.1.5")}
+	raddr := net.IPAddr{IP: net.ParseIP("192.168.1.5")}
 
 	conn, err := net.DialIP("ip4:icmp", &laddr, &raddr)
 	if err != nil {
@@ -54,7 +54,7 @@ func main() {
 		return
 	}
 	icmp.GetCheckSum(buf.Bytes())
-	fmt.Println(icmp)
+	fmt.Println("icmp", icmp)
 
 	buf.Reset()
 	if err = binary.Write(&buf, binary.BigEndian, icmp); err != nil {
@@ -72,6 +72,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println(123)
 
 	fmt.Println(conn.RemoteAddr(), string(b))
 	fmt.Println("ok")
