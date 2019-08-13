@@ -14,7 +14,7 @@ import (
 // >> endobj
 //-----------------------------------
 
-// 从obj中找到 /str x y R，返回x
+// 从obj中找到 /str # # R，返回x
 func findR(b []byte, str string) (obj string, err error) {
 	var re *regexp.Regexp
 	var expr string = `/` + str + ` (\d{1,}) \d{1,} R`
