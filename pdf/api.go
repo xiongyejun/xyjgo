@@ -2,109 +2,141 @@ package pdf
 
 import (
 	"bytes"
+	"compress/zlib"
 	"errors"
+	"io"
+	"os"
 	"regexp"
+
+	"strconv"
+
+	"github.com/xiongyejun/xyjgo/fileHeader"
 )
 
-func (me *PDF) Parse() (err error) {
-	if me.Src == nil {
-		return errors.New("me.Src == nil, 请先使用New读取PDF。")
-	}
-	if err = me.getTrailer(); err != nil {
+func Parse(FilePath string) (p *PDF, err error) {
+	p = new(PDF)
+	p.Path = FilePath
+	if p.f, err = os.Open(p.Path); err != nil {
 		return
 	}
-	if err = me.getObj(); err != nil {
+	var fInfo os.FileInfo
+	if fInfo, err = p.f.Stat(); err != nil {
+		return
+	}
+	p.fSize = fInfo.Size()
+
+	p.Header = make([]byte, 8)
+	if _, err = p.f.Read(p.Header); err != nil {
+		return
+	}
+
+	if !fileHeader.IsPDF(p.Header) {
+		return nil, errors.New("不是PDF文件")
+	}
+
+	if p.Header == nil {
+		return nil, errors.New("me.Header == nil, 请先使用New读取PDF。")
+	}
+	if err = p.getTrailer(); err != nil {
+		return
+	}
+
+	if err = p.getCatalog(); err != nil {
 		return
 	}
 	return
 }
 
-//PDF解析流程：
-//a）从trailer中找到Root关键字，Root是指向Catalog字典，Catalog是一个PDF文件的总入口，它包含Page tree，Outline hierarchy等。
-func (me *PDF) getTrailer() (err error) {
-	// trailer 说明文件尾trailer对象的开始
-	rootIndex := bytes.Index(me.Src, []byte("trailer"))
-
-	if rootIndex == -1 {
-		return errors.New("没有找到[trailer]")
-	}
-
-	b := me.Src[rootIndex:]
-	// /Root # # R说明根对象的对象号为#
-	if me.RootR, err = findR(b, "Root"); err != nil {
+func (me *PDF) GetPageByte(pageIndex int) (ret []byte, err error) {
+	var b []byte
+	if b, err = me.readObjByte(me.pagesInfo[pageIndex].ContentsObjIndex); err != nil {
 		return
 	}
+	iStart := bytes.Index(b, []byte("stream"))
+	if iStart == -1 {
+		err = errors.New("没有找到字符串[stream]。")
+	}
+	iEnd := bytes.Index(b, []byte("endstream"))
+	if iEnd == -1 {
+		err = errors.New("没有找到字符串[endstream]。")
+	}
+	ret = b[iStart+len("stream")+1 : iEnd] // +1有1个换行符0x0A
+	// 是否压缩了
+	if bytes.Contains(b, []byte("/Filter /FlateDecode")) {
+		buf := bytes.NewReader(ret)
+		var r io.ReadCloser
+		if r, err = zlib.NewReader(buf); err != nil {
+			return
+		}
+		defer r.Close()
+		var out bytes.Buffer
+		if _, err = io.Copy(&out, r); err != nil {
+			return
+		}
 
-	// Startxref
-	// ### 说明交叉引用表的偏移地址
+		ret = out.Bytes()
+	}
 
-	// xref 交叉引用表
-	// #1 #2 说明下面各行所描述的对象号是从#1开始，并且有#2个对象
-	// 0000000000 65535 f 一般每个PDF文件都是以这一行开始交叉应用表的，说明对象0的起始地址为0000000000，产生号（generation number）为65535，也是最大产生号，不可以再进行更改，而且最后对象的表示是f,表明该对象为free, 这里，大家可以看到，其实这个对象可以看作是文件头
-	// …………
-	// 0000000322 00000 n  对象n的偏移地址为322
-	// …………
-	return nil
+	return
 }
 
-// 用正则获取对象
-// ------------------------------------
-// # # obj
-// ...
-// endobj
-// ------------------------------------
-// 第一个数字#称为对象号，来唯一标识一个对象的
-// 第二个#是产生号，是来表明它在被创建后的第几次修改
-// 所有新创建的PDF文件的对象号应该都是0，即第一次被创建以后没有被修改过
-func (me *PDF) getObj() (err error) {
+// 解析页面数据
+func (me *PDF) ParsePageByte(pageByte []byte) (ret []byte, err error) {
+	// 由()包含起来的一个字串,中间可以使用转义符"/".
+	//  (abc) 表示abc
+	//  (a//) 表示a/
+	// 转义字符见下表
+
+	// 由<>包含起来的一个16进制串,两位表示一个字符,不足两位用0补齐
+	// <Aabb> 表示AA和BB两个字符
+	// <AAB> 表示AA和B0两个字符
+
 	var re *regexp.Regexp
-	// (?标记)               在组内设置标记，非捕获，标记影响当前组后的正则表达式
-	// s              让 . 匹配 \n (默认为 false)
-	var expr string = `(?s)(\d{1,}) \d{1,} obj.*?<<(.*?)>>.*?endobj`
+	//
+	var expr string = `Tf.*?(<[0-9a-zA-Z]+?>).*?Tj|Tf.*?(\(.+?\)).*?Tj`
 	if re, err = regexp.Compile(expr); err != nil {
 		return
 	}
-	objs := re.FindAllSubmatch(me.Src, -1)
-	indexs := re.FindAllSubmatchIndex(me.Src, -1)
-	if objs == nil {
-		return errors.New("当前文档没有找到obj。")
+	bb := re.FindAllSubmatch(pageByte, -1)
+	if len(bb) == 0 {
+		err = errors.New("没有找到“Tf(xx)Tj”或者“Tf<xx>Tj”")
+		return
 	}
-	me.objs = make([]obj, len(objs))
-	me.mObj = make(map[string]int, len(objs))
-	for i := range objs {
-		me.objs[i].strIndex = string(objs[i][1]) // 记录对象号
-		me.mObj[me.objs[i].strIndex] = i         // 记录到map中，key是对象号
-		me.objs[i].b = objs[i][0]                // 对象的byte（在<< 和>>之间的）
-		me.objs[i].indexSrc = indexs[i][0]       // 对象的byte在src中出现的位置
+
+	var b []byte
+	for i := range bb {
+		print("bb=" + string(bb[i][1]) + "  bb1=" + string(bb[i][2]) + "\n")
+		if len(bb[i][1]) != 0 { // '<'
+			b = bb[i][1][1 : len(bb[i][1])-1]
+			if len(b)%2 == 1 {
+				b = append(b, '0')
+			}
+			for j := 0; j < len(b); j += 2 {
+				strHex := "0x" + string(b[j:j+2])
+				var n int64
+				if n, err = strconv.ParseInt(strHex, 0, 64); err != nil {
+					return
+				}
+				ret = append(ret, byte(n))
+			}
+		} else {
+			b = bb[i][2][1 : len(bb[i][2])-1]
+			if b[0] == '!' {
+				b[0] = 0x0A
+			}
+			ret = append(ret, b...)
+		}
 	}
 	return
 }
 
-//b）从Catalog中找到Pages关键字，Pages是PDF所有页面的总入口，即Page Tree Root。
-//c）从Pages中找到Kids和Count关键字，Kids中包含Page子节点，Count列出该文档的总页数。到这里我们已经知道PDF文件有多少页了。
-func (me *PDF) getPageTreeRoot() (err error) {
-	// var bRoot []byte
-	// if bRoot, err = me.GetObjByte(me.RootR); err != nil {
-	// 	return
-	// }
-
-	// var strIndex string
-	// if strIndex, err = findR(bRoot, "Pages"); err != nil {
-	// 	return
-	// }
-
-	// var bPages []byte
-	// if bPages, err = me.GetObjByte(strIndex); err != nil {
-	// 	return
-	// }
-
-	return
-}
-
-//d）从Page字典中获取MediaBox、Contents、Resources等信息，MediaBox包含页面宽高信息，Contents包含页面内容，Resources包含页面所需要的资源信息。
-
-//e）从Contents指向的内容流中获取页面内容。
-
-//简单流程
-
-//trailer→ Root→ Catalog→ Pages→ Page→ Contents
+// 转义字符	含义
+// /n	换行
+// /r	回车
+// /t	水平制表符
+// /b	退格
+// /f	换页（Form feed (FF)）
+// /(	左括号
+// /)	右括号
+// //	反斜杠
+// /ddd	八进制形式的字符
