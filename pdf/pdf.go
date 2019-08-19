@@ -1,5 +1,6 @@
 // Portable Document Format的简称，意为“便携式文档格式”
-// https://www.jianshu.com/p/51eb811ba935
+// https://www.jianshu.com/p/51eb811ba935 简单讲解
+// https://blog.csdn.net/steve_cui/article/details/81910632 详细讲解
 package pdf
 
 import (
@@ -27,7 +28,6 @@ type pageInfo struct {
 }
 
 type PDF struct {
-	Path  string
 	f     *os.File
 	fSize int64
 
@@ -46,7 +46,6 @@ type PDF struct {
 	kidsObj   []int // 记录的是page的obj index
 	pagesInfo []pageInfo
 	Header    []byte // %PDF-1.0
-
 }
 
 //PDF解析流程：
@@ -67,12 +66,10 @@ func (me *PDF) getTrailer() (err error) {
 
 	b = b[n:]
 	// /Root # # R说明根对象的对象号为#
-	if me.RootR, err = findR(b, "Root"); err != nil {
+	if me.rootObjIndex, err = findR(b, "Root"); err != nil {
 		return
 	}
-	if me.rootObjIndex, err = strconv.Atoi(me.RootR); err != nil {
-		return errors.New("Root # # R转化int出错。")
-	}
+
 	return me.getXref(b)
 }
 
@@ -173,12 +170,8 @@ func (me *PDF) getCatalog() (err error) {
 	}
 
 	//  读取Pages
-	var ps string
-	if ps, err = findR(bRoot, "Pages"); err != nil {
+	if me.pagesObjIndex, err = findR(bRoot, "Pages"); err != nil {
 		return
-	}
-	if me.pagesObjIndex, err = strconv.Atoi(ps); err != nil {
-		return errors.New("Pages # # R转化int出错。")
 	}
 	var bPages []byte
 	if bPages, err = me.readObjByte(me.pagesObjIndex); err != nil {
@@ -195,8 +188,7 @@ func (me *PDF) getCatalog() (err error) {
 	b := bPages[x+len("/Count "):]
 	x = bytes.Index(b, []byte(" "))
 	b = b[:x]
-	ps = string(b)
-	if me.Pages, err = strconv.Atoi(ps); err != nil {
+	if me.Pages, err = strconv.Atoi(string(b)); err != nil {
 		return errors.New("Count # # R转化int出错。")
 	}
 
@@ -247,18 +239,11 @@ func (me *PDF) getPagesInfo() (err error) {
 		}
 
 		// 读取Resources和Contents的对象index
-		var r string
-		if r, err = findR(b, "Resources"); err != nil {
-			return
-		}
-		if me.pagesInfo[i].ResourcesObjIndex, err = strconv.Atoi(r); err != nil {
+		if me.pagesInfo[i].ResourcesObjIndex, err = findR(b, "Resources"); err != nil {
 			return
 		}
 
-		if r, err = findR(b, "Contents"); err != nil {
-			return
-		}
-		if me.pagesInfo[i].ContentsObjIndex, err = strconv.Atoi(r); err != nil {
+		if me.pagesInfo[i].ContentsObjIndex, err = findR(b, "Contents"); err != nil {
 			return
 		}
 

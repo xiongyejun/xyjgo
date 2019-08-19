@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"regexp"
+	"strconv"
 )
 
 //-----------------------------------
@@ -16,7 +17,7 @@ import (
 //-----------------------------------
 
 // 从obj中找到 /str # # R，返回x
-func findR(b []byte, str string) (obj string, err error) {
+func findR(b []byte, str string) (obj int, err error) {
 	var re *regexp.Regexp
 	var expr string = `/` + str + ` (\d+) \d+ R`
 	if re, err = regexp.Compile(expr); err != nil {
@@ -24,10 +25,11 @@ func findR(b []byte, str string) (obj string, err error) {
 	}
 	bb := re.FindSubmatch(b)
 	if len(bb) == 0 {
-		return "", errors.New("没有找到[/" + str + " # # R]\n" + string(b))
+		return -1, errors.New("没有找到[/" + str + " # # R]\n" + string(b))
 	}
-
-	return string(bb[1]), nil
+	// 前面是用正则找的数字，所以这里就不需要再判断err了
+	obj, _ = strconv.Atoi(string(bb[1]))
+	return
 }
 
 // 从文件后面读取nBytes个字节，如果nBytes=-1，nBytes=512

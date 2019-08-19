@@ -13,12 +13,9 @@ import (
 	"github.com/xiongyejun/xyjgo/fileHeader"
 )
 
-func Parse(FilePath string) (p *PDF, err error) {
+func Parse(f *os.File) (p *PDF, err error) {
 	p = new(PDF)
-	p.Path = FilePath
-	if p.f, err = os.Open(p.Path); err != nil {
-		return
-	}
+	p.f = f
 	var fInfo os.FileInfo
 	if fInfo, err = p.f.Stat(); err != nil {
 		return
@@ -34,9 +31,6 @@ func Parse(FilePath string) (p *PDF, err error) {
 		return nil, errors.New("不是PDF文件")
 	}
 
-	if p.Header == nil {
-		return nil, errors.New("me.Header == nil, 请先使用New读取PDF。")
-	}
 	if err = p.getTrailer(); err != nil {
 		return
 	}
