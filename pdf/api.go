@@ -56,7 +56,7 @@ func (me *PDF) GetPageByte(pageIndex int) (ret []byte, err error) {
 	}
 	ret = b[iStart+len("stream")+1 : iEnd] // +1有1个换行符0x0A
 	// 是否压缩了
-	if bytes.Contains(b, []byte("/Filter /FlateDecode")) {
+	if bytes.Contains(b, []byte("/FlateDecode")) {
 		buf := bytes.NewReader(ret)
 		var r io.ReadCloser
 		if r, err = zlib.NewReader(buf); err != nil {
@@ -93,7 +93,7 @@ func (me *PDF) ParsePageByte(pageByte []byte) (ret []byte, err error) {
 	}
 	bb := re.FindAllSubmatch(pageByte, -1)
 	if len(bb) == 0 {
-		err = errors.New("没有找到“Tf(xx)Tj”或者“Tf<xx>Tj”")
+		err = errors.New("没有找到“Tf(xx)Tj”或者“Tf<xx>Tj”\n" + string(pageByte))
 		return
 	}
 

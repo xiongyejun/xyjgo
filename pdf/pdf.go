@@ -165,8 +165,8 @@ func (me *PDF) getCatalog() (err error) {
 	if bRoot, err = me.readObjByte(me.rootObjIndex); err != nil {
 		return
 	}
-	if !bytes.Contains(bRoot, []byte("<< /Type /Catalog /Pages ")) {
-		return errors.New("读取的Root不包含[<< /Type /Catalog /Pages ]!\n" + string(bRoot))
+	if !bytes.Contains(bRoot, []byte("/Catalog")) {
+		return errors.New("读取的Root不包含[/Catalog]!\n" + string(bRoot))
 	}
 
 	//  读取Pages
@@ -177,19 +177,21 @@ func (me *PDF) getCatalog() (err error) {
 	if bPages, err = me.readObjByte(me.pagesObjIndex); err != nil {
 		return
 	}
-	if !bytes.Contains(bPages, []byte("<< /Type /Pages ")) {
-		return errors.New("读取的Pages不包含[<< /Type /Pages  ]!\n" + string(bPages))
+	if !bytes.Contains(bPages, []byte("/Pages")) {
+		return errors.New("读取的Pages不包含[/Pages]!\n" + string(bPages))
 	}
 
 	x := bytes.Index(bPages, []byte("/Count "))
 	if x == -1 {
 		return errors.New("没有找到[/Count ]")
 	}
+
 	b := bPages[x+len("/Count "):]
 	x = bytes.Index(b, []byte(" "))
+	x = bytes.Index(b, []byte("/Kids")) // 有的可能没有空格
 	b = b[:x]
 	if me.Pages, err = strconv.Atoi(string(b)); err != nil {
-		return errors.New("Count # # R转化int出错。")
+		return errors.New("Count # # R转化int出错。\n" + string(b))
 	}
 
 	return me.getKids(bPages)
@@ -234,13 +236,14 @@ func (me *PDF) getPagesInfo() (err error) {
 			return
 		}
 		// << /Type /Page /Parent 3 0 R /Resources 6 0 R /Contents 4 0 R /MediaBox [0 0 595.28 841.89] >>
-		if !bytes.Contains(b, []byte("<< /Type /Page ")) {
-			return errors.New("读取的Page不包含[<< /Type /Page ]!\n" + string(b))
+		if !bytes.Contains(b, []byte("/Page")) {
+			return errors.New("读取的Page不包含[/Page]!\n" + string(b))
 		}
 
 		// 读取Resources和Contents的对象index
 		if me.pagesInfo[i].ResourcesObjIndex, err = findR(b, "Resources"); err != nil {
-			return
+			// 有的Resources不是间接对象，ProcSet就在Page里
+			me.pagesInfo[i].ResourcesObjIndex = me.kidsObj[i]
 		}
 
 		if me.pagesInfo[i].ContentsObjIndex, err = findR(b, "Contents"); err != nil {
