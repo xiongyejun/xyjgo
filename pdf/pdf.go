@@ -1,6 +1,6 @@
 // Portable Document Format的简称，意为“便携式文档格式”
 // https://www.jianshu.com/p/51eb811ba935 简单讲解
-// https://blog.csdn.net/steve_cui/article/details/81910632 详细讲解
+// https://blog.csdn.net/steve_cui/article/category/7978733 详细讲解
 package pdf
 
 import (
@@ -187,11 +187,14 @@ func (me *PDF) getCatalog() (err error) {
 	}
 
 	b := bPages[x+len("/Count "):]
+	// /Count 3 /Kids
 	x = bytes.Index(b, []byte(" "))
-	x = bytes.Index(b, []byte("/Kids")) // 有的可能没有空格
+	if x == -1 {
+		x = bytes.Index(b, []byte("/Kids")) // 有的可能没有空格
+	}
 	b = b[:x]
 	if me.Pages, err = strconv.Atoi(string(b)); err != nil {
-		return errors.New("Count # # R转化int出错。\n" + string(b))
+		return errors.New("Count # 转化int出错。\n" + string(b))
 	}
 
 	return me.getKids(bPages)

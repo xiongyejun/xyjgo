@@ -9,7 +9,7 @@ import (
 
 func Test_func(t *testing.T) {
 	t.Logf("%s\r\n", []byte{0x25, 0x50, 0x44, 0x46})
-	f, err := os.Open("xlsx.pdf")
+	f, err := os.Open("1.pdf")
 	if err != nil {
 		t.Error(err)
 		return
@@ -26,6 +26,8 @@ func Test_func(t *testing.T) {
 			if b, err := p.GetPageByte(i); err != nil {
 				t.Error(err)
 			} else {
+				t.Logf("%s\n", b)
+				t.Log("\n")
 				if bb, err := p.ParsePageByte(b); err != nil {
 					t.Error(err)
 				} else {
