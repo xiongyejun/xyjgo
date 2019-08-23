@@ -1,0 +1,1 @@
+del c\go.a c\go.h go.lib go.dll

@@ -1,8 +1,0 @@
-EXPORTS
-	Sum
-	Hello
-	TestPInt
-	GetStr
-	TestPtr
-	OneInt
-	TestPInt32
