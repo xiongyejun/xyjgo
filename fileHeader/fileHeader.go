@@ -23,6 +23,10 @@ const (
 
 var fh []*fileHeader
 
+func IsPDF(bFile []byte) bool {
+	return isWhat(bFile, PDF)
+}
+
 func IsZIP(bFile []byte) bool {
 	return isWhat(bFile, ZIP)
 }
