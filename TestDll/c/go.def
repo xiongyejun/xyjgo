@@ -1,3 +1,5 @@
 EXPORTS
 	sum
 	getStr
+	reurnSlice
+	cfree
