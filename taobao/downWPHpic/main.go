@@ -146,7 +146,8 @@ func getResult(b []byte) {
 
 	// 下载图片
 	// <a href="//a.vpimg3.com/upload/merchandise/vis/136/20021226-3/4/1438782-1.jpg" class="J-mer-bigImgZoom">
-	expr = `<a href="//a\.vpimg3\.com/upload/merchandise/vis/(.*?)\.jpg" class="J-mer-bigImgZoom">`
+	// <a href="//a.vpimg3.com/upload/merchandise/pdc/216/745/7817480819492745216/0/RYMA-FI15400954-1.jpg" class="J-mer-bigImgZoom">
+	expr = `<a href="//a\.vpimg3\.com/upload/merchandise/(.*?)\.jpg" class="J-mer-bigImgZoom">`
 	if re, err = regexp.Compile(expr); err != nil {
 		fmt.Println(err)
 		return
@@ -162,7 +163,7 @@ func getResult(b []byte) {
 		index := bytes.LastIndex(bUrl, []byte("/"))
 		if index != -1 {
 			picName := string(bUrl[index+1:]) + ".jpg"
-			if b, err = httpGet(`https://a.vpimg3.com/upload/merchandise/vis/` + string(bUrl) + ".jpg"); err != nil {
+			if b, err = httpGet(`https://a.vpimg3.com/upload/merchandise/` + string(bUrl) + ".jpg"); err != nil {
 				fmt.Println(err, "\n")
 				return
 			}
