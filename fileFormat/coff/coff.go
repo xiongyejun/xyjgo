@@ -1,7 +1,7 @@
 // COFF(Common Object File Format)
 //		PE（Protable Executable）32位win可执行文件
 //		PE的前身就是COFF
-package o
+package coff
 
 import (
 	"bytes"
@@ -109,12 +109,8 @@ func init() {
 }
 
 // 解析文件
-func (me *COFF) Parse(fileName string) (err error) {
-	if me.f, err = os.Open(fileName); err != nil {
-		return
-	}
-	defer me.f.Close()
-
+func (me *COFF) Parse(f *os.File) (err error) {
+	me.f = f
 	if err = me.readHeader(); err != nil {
 		return
 	}
@@ -123,6 +119,10 @@ func (me *COFF) Parse(fileName string) (err error) {
 		return
 	}
 
+	// 设置文件读取的开始地址
+	if _, err = me.f.Seek(int64(me.Header.PointerToSymbolTable), 0); err != nil {
+		return
+	}
 	if err = me.readSymbol(); err != nil {
 		return
 	}
@@ -182,10 +182,6 @@ func (me *COFF) readSymbol() (err error) {
 	me.Symbols = make([]*IMAGE_SYMBOL, me.Header.NumberOfSymbols)
 	symbolSize := binary.Size(new(IMAGE_SYMBOL))
 
-	// 设置文件读取的开始地址
-	if _, err = me.f.Seek(int64(me.Header.PointerToSymbolTable), 0); err != nil {
-		return
-	}
 	// 逐个读取symbol
 	for i := range me.Symbols {
 		var b []byte = make([]byte, symbolSize)
