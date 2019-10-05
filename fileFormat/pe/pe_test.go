@@ -18,6 +18,7 @@ func Test_t(t *testing.T) {
 	if err = pe.Parse(f); err != nil {
 		t.Log(err)
 	} else {
+		t.Logf("%X\n", pe.DosHeader.E_magic)
 		t.Logf("%x\n", pe.DosHeader.E_lfanew)
 
 		t.Logf("%x\n", pe.NTHeader.Signature)
@@ -25,5 +26,7 @@ func Test_t(t *testing.T) {
 		for i := range pe.NTHeader.OptionalHeader.DataDirectory {
 			t.Logf("%2d %x\t%x\n", i, pe.NTHeader.OptionalHeader.DataDirectory[i].VirtualAddress, pe.NTHeader.OptionalHeader.DataDirectory[i].Size)
 		}
+
+		t.Log(pe.NTHeader.FileHeader.GetCoffHeaderPrintStr())
 	}
 }

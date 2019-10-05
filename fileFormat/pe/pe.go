@@ -145,7 +145,10 @@ func (me *PE) readDosHeader() (err error) {
 	if err = byte2struct(b, me.DosHeader); err != nil {
 		return
 	}
-
+	if me.DosHeader.E_magic != 0x5A4D {
+		err = errors.New("IMAGE_DOS_HEADER.DosHeader != 0x5A4D(MZ)")
+		return
+	}
 	return
 }
 
@@ -168,7 +171,7 @@ func (me *PE) readNTHeader() (err error) {
 	}
 
 	if me.NTHeader.Signature != 0x00004550 {
-		err = errors.New("IMAGE_DOS_HEADER.Signature != 0x00004550")
+		err = errors.New("IMAGE_NT_HEADERS.Signature != 0x00004550(PE)")
 		return
 	}
 	return

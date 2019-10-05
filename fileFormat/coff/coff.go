@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"os"
+	"time"
 )
 
 // typedef struct _IMAGE_FILE_HEADER {
@@ -202,6 +204,17 @@ func (me *COFF) readSymbol() (err error) {
 	}
 
 	return
+}
+
+func (me *IMAGE_FILE_HEADER) GetCoffHeaderPrintStr() string {
+	return "FILE HEADER VALUES\n" +
+		fmt.Sprintf("%16X machine (x86)\n", me.Machine) +
+		fmt.Sprintf("%16X number of sections\n", me.NumberOfSections) +
+		fmt.Sprintf("%16X time date stamp %s\n", me.TimeDateStamp, time.Unix(int64(me.TimeDateStamp), 0).Format("2006-01-02 15:04:05")) +
+		fmt.Sprintf("%16X file pointer to symbol table\n", me.PointerToSymbolTable) +
+		fmt.Sprintf("%16X number of symbols\n", me.NumberOfSymbols) +
+		fmt.Sprintf("%16X size of optional header\n", me.SizeOfOptionalHeader) +
+		fmt.Sprintf("%16X characteristics\n", me.Characteristics)
 }
 func byte2struct(b []byte, pStruct interface{}) error {
 	buf := bytes.NewBuffer(b)

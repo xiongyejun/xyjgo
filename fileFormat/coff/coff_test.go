@@ -3,13 +3,12 @@ package coff
 import (
 	"os"
 	"testing"
-	"time"
 )
 
 func Test_f(t *testing.T) {
 	var err error
 	var f *os.File
-	if f, err = os.Open(`c\SimpleSection.obj`); err != nil {
+	if f, err = os.Open(`..\testc\SimpleSection.obj`); err != nil {
 		t.Log(err)
 		return
 	}
@@ -20,14 +19,7 @@ func Test_f(t *testing.T) {
 		t.Error(err)
 		return
 	} else {
-		t.Logf("FILE HEADER VALUES\n")
-		t.Logf("%16X machine (x86)\n", coff.Header.Machine)
-		t.Logf("%16X number of sections\n", coff.Header.NumberOfSections)
-		t.Logf("%16X time date stamp %s\n", coff.Header.TimeDateStamp, time.Unix(int64(coff.Header.TimeDateStamp), 0).Format("2006-01-02 15:04:05"))
-		t.Logf("%16X file pointer to symbol table\n", coff.Header.PointerToSymbolTable)
-		t.Logf("%16X number of symbols\n", coff.Header.NumberOfSymbols)
-		t.Logf("%16X size of optional header\n", coff.Header.SizeOfOptionalHeader)
-		t.Logf("%16X characteristics\n", coff.Header.Characteristics)
+		t.Log(coff.Header.GetCoffHeaderPrintStr())
 
 		t.Log("\nSections:")
 		for i := range coff.Sections {
