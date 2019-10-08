@@ -8,7 +8,7 @@ import (
 func Test_t(t *testing.T) {
 	var err error
 	var f *os.File
-	if f, err = os.Open(`..\testc\SimpleSection.exe`); err != nil {
+	if f, err = os.Open(`..\testc\Math.dll`); err != nil {
 		t.Log(err)
 		return
 	}
@@ -18,15 +18,15 @@ func Test_t(t *testing.T) {
 	if err = pe.Parse(f); err != nil {
 		t.Log(err)
 	} else {
-		t.Logf("%X\n", pe.DosHeader.E_magic)
-		t.Logf("%x\n", pe.DosHeader.E_lfanew)
+		t.Log(pe.NTHeader.FileHeader.GetPrintStr())
 
-		t.Logf("%x\n", pe.NTHeader.Signature)
+		t.Log(pe.NTHeader.OptionalHeader.GetPrintStr())
 
-		for i := range pe.NTHeader.OptionalHeader.DataDirectory {
-			t.Logf("%2d %x\t%x\n", i, pe.NTHeader.OptionalHeader.DataDirectory[i].VirtualAddress, pe.NTHeader.OptionalHeader.DataDirectory[i].Size)
+		for i := range pe.Sections {
+			t.Log(pe.Sections[i].GetPrintStr(i))
 		}
 
-		t.Log(pe.NTHeader.FileHeader.GetCoffHeaderPrintStr())
+		t.Log("pe.ExportDir:")
+		t.Logf("%#v\n", pe.ExportDir)
 	}
 }

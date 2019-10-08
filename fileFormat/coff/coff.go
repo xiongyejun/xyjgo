@@ -1,6 +1,7 @@
 // COFF(Common Object File Format)
 //		PE（Protable Executable）32位win可执行文件
 //		PE的前身就是COFF
+// 结构定义在winnt.h
 package coff
 
 import (
@@ -11,16 +12,6 @@ import (
 	"os"
 	"time"
 )
-
-// typedef struct _IMAGE_FILE_HEADER {
-//   WORD Machine;
-//   WORD NumberOfSections;
-//   DWORD TimeDateStamp;
-//   DWORD PointerToSymbolTable;
-//   DWORD NumberOfSymbols;
-//   WORD SizeOfOptionalHeader;
-//   WORD Characteristics;
-// } IMAGE_FILE_HEADER,*PIMAGE_FILE_HEADER;
 
 type SHORT = int16
 type WORD = uint16
@@ -39,25 +30,15 @@ type IMAGE_FILE_HEADER struct {
 	Characteristics      WORD
 }
 
-// typedef struct _IMAGE_SECTION_HEADER {
-//   BYTE Name[IMAGE_SIZEOF_SHORT_NAME];
-//   union {
-// DWORD PhysicalAddress;
-// DWORD VirtualSize;
-//   } Misc;
-//   DWORD VirtualAddress;
-//   DWORD SizeOfRawData;
-//   DWORD PointerToRawData;
-//   DWORD PointerToRelocations;
-//   DWORD PointerToLinenumbers;
-//   WORD NumberOfRelocations;
-//   WORD NumberOfLinenumbers;
-//   DWORD Characteristics;
-// } IMAGE_SECTION_HEADER,*PIMAGE_SECTION_HEADER;
 const IMAGE_SIZEOF_SHORT_NAME = 8
 
 type IMAGE_SECTION_HEADER struct {
-	Name                 [IMAGE_SIZEOF_SHORT_NAME]byte
+	Name [IMAGE_SIZEOF_SHORT_NAME]byte
+	/*
+		union {
+			DWORD PhysicalAddress;
+			DWORD VirtualSize;
+	      } Misc;*/
 	Misc                 DWORD
 	VirtualAddress       DWORD
 	SizeOfRawData        DWORD
@@ -69,22 +50,6 @@ type IMAGE_SECTION_HEADER struct {
 	Characteristics      DWORD
 }
 
-// typedef struct _IMAGE_SYMBOL {
-//     union {
-// BYTE ShortName[8];
-// struct {
-//  DWORD Short;
-//  DWORD Long;
-// } Name;
-// DWORD LongName[2];
-//     } N;
-//     DWORD Value;
-//     SHORT SectionNumber;
-//     WORD Type;
-//     BYTE StorageClass;
-//     BYTE NumberOfAuxSymbols;
-//   } IMAGE_SYMBOL;
-//   typedef IMAGE_SYMBOL UNALIGNED *PIMAGE_SYMBOL;
 type IMAGE_SYMBOL struct {
 	ShortName          [8]byte
 	Value              DWORD
@@ -94,11 +59,24 @@ type IMAGE_SYMBOL struct {
 	NumberOfAuxSymbols byte
 }
 
-// objdump -h SimpleSection.o 查看木变文件的结构和内容
+// objdump -h SimpleSection.o 查看目标文件的结构和内容
 // .text	Code Section	代码段
 // .data	Data Section	数据段	已初始化的全局变量和局部静态变量
 // .bss		Block Started by Symbol		--		未初始化的全局变量和局部静态变量
 
+/*
+	COFF目标文件格式
+-------------------------------
+	IMAGE_FILE_HEADER
+	IMAGE_SECTION_HEADER[]
+	.text
+	.data
+	.drectve
+	.debug$S
+	...
+	other sections
+	SYMBOL Table
+*/
 type COFF struct {
 	f        *os.File
 	Header   *IMAGE_FILE_HEADER
@@ -206,7 +184,7 @@ func (me *COFF) readSymbol() (err error) {
 	return
 }
 
-func (me *IMAGE_FILE_HEADER) GetCoffHeaderPrintStr() string {
+func (me *IMAGE_FILE_HEADER) GetPrintStr() string {
 	return "FILE HEADER VALUES\n" +
 		fmt.Sprintf("%16X machine (x86)\n", me.Machine) +
 		fmt.Sprintf("%16X number of sections\n", me.NumberOfSections) +
@@ -216,6 +194,21 @@ func (me *IMAGE_FILE_HEADER) GetCoffHeaderPrintStr() string {
 		fmt.Sprintf("%16X size of optional header\n", me.SizeOfOptionalHeader) +
 		fmt.Sprintf("%16X characteristics\n", me.Characteristics)
 }
+
+func (me *IMAGE_SECTION_HEADER) GetPrintStr(index int) string {
+	return fmt.Sprintf("SECTION HEADER #%d\n", index+1) +
+		fmt.Sprintf("%s\n", me.Name) +
+		fmt.Sprintf("%16X physical address\n", me.Misc) +
+		fmt.Sprintf("%16X virtual address\n", me.VirtualAddress) +
+		fmt.Sprintf("%16X size of raw data\n", me.SizeOfRawData) +
+		fmt.Sprintf("%16X file pointer to raw data\n", me.PointerToRawData) +
+		fmt.Sprintf("%16X file pointer to relocation table\n", me.PointerToRelocations) +
+		fmt.Sprintf("%16X file pointer to line numbers\n", me.PointerToLinenumbers) +
+		fmt.Sprintf("%16X number of relocations\n", me.NumberOfRelocations) +
+		fmt.Sprintf("%16X number of line numbers\n", me.NumberOfLinenumbers) +
+		fmt.Sprintf("%16X flags\n", me.Characteristics)
+}
+
 func byte2struct(b []byte, pStruct interface{}) error {
 	buf := bytes.NewBuffer(b)
 	return binary.Read(buf, binary.LittleEndian, pStruct)

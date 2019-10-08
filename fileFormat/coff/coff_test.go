@@ -19,11 +19,11 @@ func Test_f(t *testing.T) {
 		t.Error(err)
 		return
 	} else {
-		t.Log(coff.Header.GetCoffHeaderPrintStr())
+		t.Log(coff.Header.GetPrintStr())
 
 		t.Log("\nSections:")
 		for i := range coff.Sections {
-			t.Logf("%d %s\t%x\t%x\n", i, coff.Sections[i].Name, coff.Sections[i].Misc, coff.Sections[i].SizeOfRawData)
+			t.Log(coff.Sections[i].GetPrintStr(i))
 		}
 		t.Log("\nSymbols:")
 		for i := range coff.Symbols {
