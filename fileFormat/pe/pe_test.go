@@ -26,6 +26,7 @@ func Test_t(t *testing.T) {
 			t.Log(pe.Sections[i].GetPrintStr(i))
 		}
 
+		t.Logf("%x\n", pe.NTHeader.OptionalHeader.DataDirectory[0].VirtualAddress)
 		t.Log("pe.ExportDir:")
 		t.Logf("%#v\n", pe.ExportDir)
 	}

@@ -126,7 +126,7 @@ func (me *PE) Parse(f *os.File) (err error) {
 	// #define IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR 14
 
 	// DataDirectory共16个元素，第1个元素就是导出表的结构的地址和长度
-	if _, err = me.f.Seek(int64(me.NTHeader.OptionalHeader.DataDirectory[0].VirtualAddress), 0); err != nil {
+	if _, err = me.f.Seek(int64(me.VA2FOA(me.NTHeader.OptionalHeader.DataDirectory[0].VirtualAddress)), 0); err != nil {
 		return
 	}
 	if err = me.readExportDir(); err != nil {
@@ -265,4 +265,27 @@ func (me *IMAGE_OPTIONAL_HEADER) GetPrintStr() string {
 func byte2struct(b []byte, pStruct interface{}) error {
 	buf := bytes.NewBuffer(b)
 	return binary.Read(buf, binary.LittleEndian, pStruct)
+}
+
+/* https://blog.csdn.net/qq_30145355/article/details/78848942
+转换一个内存地址RVA到一个文件的偏移是多少，怎么实现？
+1、把PE文件中的所有区段信息全部读取出来
+2、RVA属于哪一个区段
+3、RVA - RVA（用需要查找的RVA减去整个区段头的RVA，
+*/
+
+// https://bbs.pediy.com/thread-221766.htm
+// 相对虚拟地址(RVA)与文件偏移地址转换(FOA)
+func (me *PE) VA2FOA(virtualAddress DWORD) DWORD {
+	for i := range me.Sections {
+		if virtualAddress > me.Sections[i].VirtualAddress && virtualAddress < (me.Sections[i].VirtualAddress+me.Sections[i].SizeOfRawData) {
+			/*
+				如果此时我的RVA值为1014，那么文件偏移为多少？
+				1、.text段的RAV(VirtualOffset)为1000，大小为4B48字节，明显我们的1014属于这个范围。对于的.text段的文件偏移(RawOffset)为400.
+				2、（1014-1000）+ 400 = 414，这就是我们的文件偏移值
+			*/
+			return virtualAddress - me.Sections[i].VirtualAddress + me.Sections[i].PointerToRawData
+		}
+	}
+	return 0xffffffff
 }
