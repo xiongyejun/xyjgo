@@ -184,9 +184,15 @@ func (me *COFF) readSymbol() (err error) {
 	return
 }
 
-func (me *IMAGE_FILE_HEADER) GetPrintStr() string {
+func (me *IMAGE_FILE_HEADER) String() string {
+	var tmp string
+	if me.Machine == 0x14c {
+		tmp = fmt.Sprintf("%16X machine (x86)\n", me.Machine)
+	} else {
+		tmp = fmt.Sprintf("%16X machine (x64)\n", me.Machine)
+	}
 	return "FILE HEADER VALUES\n" +
-		fmt.Sprintf("%16X machine (x86)\n", me.Machine) +
+		tmp +
 		fmt.Sprintf("%16X number of sections\n", me.NumberOfSections) +
 		fmt.Sprintf("%16X time date stamp %s\n", me.TimeDateStamp, time.Unix(int64(me.TimeDateStamp), 0).Format("2006-01-02 15:04:05")) +
 		fmt.Sprintf("%16X file pointer to symbol table\n", me.PointerToSymbolTable) +
@@ -195,7 +201,7 @@ func (me *IMAGE_FILE_HEADER) GetPrintStr() string {
 		fmt.Sprintf("%16X characteristics\n", me.Characteristics)
 }
 
-func (me *IMAGE_SECTION_HEADER) GetPrintStr(index int) string {
+func (me *IMAGE_SECTION_HEADER) String(index int) string {
 	return fmt.Sprintf("SECTION HEADER #%d\n", index+1) +
 		fmt.Sprintf("%s\n", me.Name) +
 		fmt.Sprintf("%16X physical address\n", me.Misc) +
