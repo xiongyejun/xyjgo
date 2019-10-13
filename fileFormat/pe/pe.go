@@ -134,15 +134,17 @@ func (me *PE) Parse(f *os.File) (err error) {
 	// #define IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR 14
 
 	// DataDirectory共16个元素，第1个元素就是导出表的结构的地址和长度
-	if _, err = me.f.Seek(int64(me.VA2FOA(me.NTHeader.OptionalHeader.FDataDirectory()[0].VirtualAddress)), 0); err != nil {
-		return
-	}
-	if err = me.readExportDir(); err != nil {
-		return
-	}
+	if me.NTHeader.FileHeader.Characteristics == 0x2102 {
+		if _, err = me.f.Seek(int64(me.VA2FOA(me.NTHeader.OptionalHeader.FDataDirectory()[0].VirtualAddress)), 0); err != nil {
+			return
+		}
+		if err = me.readExportDir(); err != nil {
+			return
+		}
 
-	if me.ExportDirInfo, err = me.ExportDir.readInfo(me); err != nil {
-		return
+		if me.ExportDirInfo, err = me.ExportDir.readInfo(me); err != nil {
+			return
+		}
 	}
 
 	return

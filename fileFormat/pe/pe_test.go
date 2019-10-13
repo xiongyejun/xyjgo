@@ -9,7 +9,7 @@ func Test_t(t *testing.T) {
 	var err error
 	var f *os.File
 	/*  ..\testc\Math.dll   C:\Windows\System32\rnr20.dll  */
-	if f, err = os.Open(`C:\Windows\System32\rnr20.dll`); err != nil {
+	if f, err = os.Open(`..\testc\virtual.exe`); err != nil {
 		t.Log(err)
 		return
 	}
@@ -27,8 +27,10 @@ func Test_t(t *testing.T) {
 			t.Log(pe.Sections[i].String(i))
 		}
 
-		t.Log(pe.ExportDir.String())
-		t.Log(pe.ExportDirInfo.String())
+		if pe.NTHeader.FileHeader.Characteristics == 0x2102 {
+			t.Log(pe.ExportDir.String())
+			t.Log(pe.ExportDirInfo.String())
+		}
 
 	}
 }
