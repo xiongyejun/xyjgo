@@ -41,7 +41,7 @@ func Test_func(t *testing.T) {
 
 	}
 
-	t.Logf("% x", []byte("测试pdf"))
+	t.Logf("% x", []byte("测试pdfz"))
 	t.Logf("% x", []byte(utf8ToGbk("测试pdf")))
 	t.Logf("% x", []byte(utf8To("测试pdf", "utf16")))
 }
