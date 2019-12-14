@@ -64,6 +64,10 @@ func jsonUnmarshal(b []byte) (err error) {
 
 // 根据json的值的类型，返回go结构体需要的字符串
 func getType(v interface{}) string {
+	if v == nil {
+		return "{}"
+	}
+
 	vType := reflect.TypeOf(v).String()
 
 	switch vType {

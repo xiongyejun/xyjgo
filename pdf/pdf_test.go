@@ -28,6 +28,7 @@ func Test_func(t *testing.T) {
 			} else {
 				t.Logf("%s\n", b)
 				t.Log("\n")
+
 				if bb, err := p.ParsePageByte(b); err != nil {
 					t.Error(err)
 				} else {
@@ -43,7 +44,14 @@ func Test_func(t *testing.T) {
 
 	t.Logf("% x", []byte("测试pdf"))
 	t.Logf("% x", []byte(utf8ToGbk("测试pdf")))
-	t.Logf("% x", []byte(utf8To("测试pdf", "utf16")))
+	bbbb := []byte(utf8To("测试pdf", "utf16"))
+
+	t.Logf("% x", bbbb)
+	for i := range bbbb {
+		bbbb[i] = ^bbbb[i]
+	}
+	t.Logf("% x", bbbb)
+
 }
 
 func gbkToUtf8(b []byte) string {
