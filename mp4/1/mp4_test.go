@@ -3,6 +3,7 @@ package mp4
 import (
 	"os"
 	"testing"
+	"time"
 )
 
 func Test_func(t *testing.T) {
@@ -16,8 +17,15 @@ func Test_func(t *testing.T) {
 
 	m, err := Decode(f)
 
-	ft := Clip(5*60, 30)
+	//	for i := range m.boxes {
+	//		t.Logf("%d type=%s, size=%d\n", i, m.boxes[i].Type(), m.boxes[i].Size())
+	//	}
+	//	t.Logf("%d\n", len(m.Moov.Trak))
+	//	return
+
+	ft := Clip((0*60+5)*time.Second, 10*time.Second)
 	var fw *os.File
+	os.Remove("2.mp4")
 	if fw, err = os.OpenFile("2.mp4", os.O_CREATE|os.O_WRONLY, 0666); err != nil {
 		t.Error(err)
 		return
@@ -25,5 +33,8 @@ func Test_func(t *testing.T) {
 
 	defer fw.Close()
 
-	EncodeFiltered(fw, m, ft)
+	if err = EncodeFiltered(fw, m, ft); err != nil {
+		t.Error(err)
+		return
+	}
 }

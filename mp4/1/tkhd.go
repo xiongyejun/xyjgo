@@ -32,8 +32,8 @@ type TkhdBox struct {
 	AlternateGroup   uint16 // should be int16
 	Volume           Fixed16
 	reserved3        uint16
-	Matrix           [9]uint32
-	Width, Height    uint32
+	Matrix           []byte
+	Width, Height    Fixed32
 }
 
 func DecodeTkhd(r io.Reader) (Box, error) {
@@ -47,19 +47,22 @@ func DecodeTkhd(r io.Reader) (Box, error) {
 		CreationTime:     binary.BigEndian.Uint32(data[4:8]),
 		ModificationTime: binary.BigEndian.Uint32(data[8:12]),
 		TrackId:          binary.BigEndian.Uint32(data[12:16]),
-		Volume:           fixed16(data[36:38]),
-		Duration:         binary.BigEndian.Uint32(data[20:24]),
-		Layer:            binary.BigEndian.Uint16(data[32:34]),
-		AlternateGroup:   binary.BigEndian.Uint16(data[34:36]),
-		Matrix:           data[40:76],
-		Width:            fixed32(data[76:80]),
-		Height:           fixed32(data[80:84]),
+		// reserved1   16:20
+		Duration: binary.BigEndian.Uint32(data[20:24]),
+		// reserved2	24:32
+		Layer:          binary.BigEndian.Uint16(data[32:34]),
+		AlternateGroup: binary.BigEndian.Uint16(data[34:36]),
+		Volume:         fixed16(data[36:38]),
+		// reserved3	38:40
+		Matrix: data[40:76],
+		Width:  fixed32(data[76:80]),
+		Height: fixed32(data[80:84]),
 	}
 
 	if t.Version == 1 {
 		return nil, ErrOlnyDecodedVer0
 	}
-	return
+	return t, nil
 }
 
 func (b *TkhdBox) Type() string {

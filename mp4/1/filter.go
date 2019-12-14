@@ -17,6 +17,7 @@ func EncodeFiltered(w io.Writer, m *MP4, f Filter) error {
 	if err != nil {
 		return err
 	}
+
 	err = f.FilterMoov(m.Moov)
 	if err != nil {
 		return err

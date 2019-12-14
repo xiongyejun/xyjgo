@@ -21,6 +21,7 @@ import (
 type SttsBox struct {
 	Version         byte
 	Flags           [3]byte
+	NumberOfEntries uint32
 	SampleCount     []uint32
 	SampleTimeDelta []uint32
 }
@@ -33,6 +34,7 @@ func DecodeStts(r io.Reader) (Box, error) {
 	b := &SttsBox{
 		Version:         data[0],
 		Flags:           [3]byte{data[1], data[2], data[3]},
+		NumberOfEntries: binary.BigEndian.Uint32(data[4:8]),
 		SampleCount:     []uint32{},
 		SampleTimeDelta: []uint32{},
 	}
@@ -88,7 +90,7 @@ func (b *SttsBox) Encode(w io.Writer) error {
 	buf := makebuf(b)
 	buf[0] = b.Version
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
-	binary.BigEndian.PutUint32(buf[4:], uint32(len(b.SampleCount)))
+	binary.BigEndian.PutUint32(buf[4:], b.NumberOfEntries)
 	for i := range b.SampleCount {
 		binary.BigEndian.PutUint32(buf[8+8*i:], b.SampleCount[i])
 		binary.BigEndian.PutUint32(buf[12+8*i:], b.SampleTimeDelta[i])

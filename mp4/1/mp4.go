@@ -3,8 +3,9 @@
 package mp4
 
 import (
+	"fmt"
+	"errors"
 	"io"
-	"os"
 )
 
 // A MPEG-4 media
@@ -24,44 +25,53 @@ type MP4 struct {
 }
 
 // Decode decodes a media from a Reader
-func Decode(r *os.File) (m *MP4, err error) {
+func Decode(r io.Reader) (m *MP4, err error) {
 	v := &MP4{
 		boxes: []Box{},
 	}
 
-	var fi os.FileInfo
-	if fi, err = r.Stat(); err != nil {
-		return nil, err
-	}
-
-	flen := fi.Size()
-	var tmp int64 = 0
-
-	for tmp < flen {
+	var flag byte = 0
+	for flag != 0b00000111 {
 		h, err := DecodeHeader(r)
+		fmt.Printf("type=%s, size=%d\n", h.Type,h.Size)
 		if err != nil {
 			return nil, err
 		}
-		tmp += int64(h.Size)
 
 		box, err := DecodeBox(h, r)
 		if err != nil {
 			return nil, err
 		}
+
 		v.boxes = append(v.boxes, box)
 		switch h.Type {
 		case "ftyp":
 			v.Ftyp = box.(*FtypBox)
+			flag = flag | 0b00000001
 		case "moov":
 			v.Moov = box.(*MoovBox)
-			return v, nil
+			flag = flag | 0b00000010
 		case "mdat":
 			v.Mdat = box.(*MdatBox)
 			v.Mdat.ContentSize = h.Size - BoxHeaderSize
-
-			r.Seek(tmp, 0)
+			flag = flag | 0b00000100
+//			b := make([]byte,100)
+//			v.Mdat.r.Read(b)
+//			fmt.Printf("% x\n",b)
+			
+			if rs, ok := r.(io.Seeker); ok {				
+				rs.Seek(int64(v.Mdat.ContentSize), 1)
+			} else {
+				return nil, errors.New("Seeker err")
+			}
+			
 		}
 	}
+	
+	if rs, ok := r.(io.Seeker); ok {				
+				rs.Seek(int64(v.Ftyp.Size()+v.Moov.Size()), 0)
+			}
+			
 	return v, nil
 }
 

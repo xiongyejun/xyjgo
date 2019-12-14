@@ -12,9 +12,10 @@ import (
 //
 // Status: decoded
 type SmhdBox struct {
-	Version byte
-	Flags   [3]byte
-	Balance uint16 // should be int16
+	Version  byte
+	Flags    [3]byte
+	Balance  uint16 // should be int16
+	reserved uint16
 }
 
 func DecodeSmhd(r io.Reader) (Box, error) {

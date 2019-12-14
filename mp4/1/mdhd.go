@@ -16,6 +16,8 @@ import (
 //
 // Timescale defines the timescale used for tracks.
 // Language is a ISO-639-2/T language code stored as 1bit padding + [3]int5
+
+// https://blog.csdn.net/yue_huang/article/details/72812109
 type MdhdBox struct {
 	Version          byte
 	Flags            [3]byte
@@ -24,6 +26,7 @@ type MdhdBox struct {
 	Timescale        uint32
 	Duration         uint32
 	Language         uint16
+	Quality          uint16
 }
 
 func DecodeMdhd(r io.Reader) (Box, error) {
@@ -39,6 +42,7 @@ func DecodeMdhd(r io.Reader) (Box, error) {
 		Timescale:        binary.BigEndian.Uint32(data[12:16]),
 		Duration:         binary.BigEndian.Uint32(data[16:20]),
 		Language:         binary.BigEndian.Uint16(data[20:22]),
+		Quality:          binary.BigEndian.Uint16(data[20:22]),
 	}, nil
 }
 
@@ -68,6 +72,7 @@ func (b *MdhdBox) Encode(w io.Writer) error {
 	binary.BigEndian.PutUint32(buf[12:], b.Timescale)
 	binary.BigEndian.PutUint32(buf[16:], b.Duration)
 	binary.BigEndian.PutUint16(buf[20:], b.Language)
+	binary.BigEndian.PutUint16(buf[20:], b.Quality)
 	_, err = w.Write(buf)
 	return err
 }

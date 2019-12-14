@@ -27,12 +27,15 @@ type MvhdBox struct {
 	Flags            [3]byte
 	CreationTime     uint32
 	ModificationTime uint32
-	Timescale        uint32 // 该数值表示本文件的所有时间描述所采用的单位。0x3E8 = 1000，即将1s平均分为1000份，每份1ms。
-	Duration         uint32 // 媒体可播放时长:duration / timescale = 可播放时长（s）。
-	NextTrackId      uint32
+	Timescale        uint32  // 该数值表示本文件的所有时间描述所采用的单位。0x3E8 = 1000，即将1s平均分为1000份，每份1ms。
+	Duration         uint32  // 媒体可播放时长:duration / timescale = 可播放时长（s）。
 	Rate             Fixed32 // 媒体速率
 	Volume           Fixed16 // 媒体音量
-	notDecoded       []byte
+	reserved1        uint16
+	reserved2        uint64
+	matrix           []byte // 4 * 9
+	pre_defined      []byte // 4 * 6
+	NextTrackId      uint32
 }
 
 func DecodeMvhd(r io.Reader) (Box, error) {
@@ -49,13 +52,17 @@ func DecodeMvhd(r io.Reader) (Box, error) {
 		Duration:         binary.BigEndian.Uint32(data[16:20]),
 		Rate:             fixed32(data[20:24]),
 		Volume:           fixed16(data[24:26]),
-		notDecoded:       data[26:],
+		//		reserved1 26:28
+		//		reserved2 28:36
+		matrix:      data[36:72],
+		pre_defined: data[72:96],
+		NextTrackId: binary.BigEndian.Uint32(data[96:100]),
 	}
 	if m.Version == 1 {
 		return nil, ErrOlnyDecodedVer0
 	}
 
-	return
+	return m, nil
 
 }
 
@@ -64,7 +71,7 @@ func (b *MvhdBox) Type() string {
 }
 
 func (b *MvhdBox) Size() int {
-	return BoxHeaderSize + 26 + len(b.notDecoded)
+	return BoxHeaderSize + 100
 }
 
 func (b *MvhdBox) Dump() {
@@ -85,7 +92,9 @@ func (b *MvhdBox) Encode(w io.Writer) error {
 	binary.BigEndian.PutUint32(buf[16:], b.Duration)
 	binary.BigEndian.PutUint32(buf[20:], uint32(b.Rate))
 	binary.BigEndian.PutUint16(buf[24:], uint16(b.Volume))
-	copy(buf[26:], b.notDecoded)
+	copy(buf[36:], b.matrix)
+	copy(buf[72:], b.pre_defined)
+	binary.BigEndian.PutUint32(buf[96:], b.NextTrackId)
 	_, err = w.Write(buf)
 	return err
 }

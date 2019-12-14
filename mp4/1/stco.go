@@ -18,9 +18,10 @@ import (
 // The table contains the offsets (starting at the beginning of the file) for each chunk of data for the current track.
 // A chunk contains samples, the table defining the allocation of samples to each chunk is stsc.
 type StcoBox struct {
-	Version     byte
-	Flags       [3]byte
-	ChunkOffset []uint32
+	Version          byte
+	Flags            [3]byte
+	ChunkOffsetCount uint32
+	ChunkOffset      []uint32
 }
 
 func DecodeStco(r io.Reader) (Box, error) {
@@ -29,12 +30,12 @@ func DecodeStco(r io.Reader) (Box, error) {
 		return nil, err
 	}
 	b := &StcoBox{
-		Version:     data[0],
-		Flags:       [3]byte{data[1], data[2], data[3]},
-		ChunkOffset: []uint32{},
+		Version:          data[0],
+		Flags:            [3]byte{data[1], data[2], data[3]},
+		ChunkOffsetCount: binary.BigEndian.Uint32(data[4:8]),
+		ChunkOffset:      []uint32{},
 	}
-	ec := binary.BigEndian.Uint32(data[4:8])
-	for i := 0; i < int(ec); i++ {
+	for i := 0; i < int(b.ChunkOffsetCount); i++ {
 		chunk := binary.BigEndian.Uint32(data[(8 + 4*i):(12 + 4*i)])
 		b.ChunkOffset = append(b.ChunkOffset, chunk)
 	}
@@ -64,7 +65,7 @@ func (b *StcoBox) Encode(w io.Writer) error {
 	buf := makebuf(b)
 	buf[0] = b.Version
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
-	binary.BigEndian.PutUint32(buf[4:], uint32(len(b.ChunkOffset)))
+	binary.BigEndian.PutUint32(buf[4:], b.ChunkOffsetCount)
 	for i := range b.ChunkOffset {
 		binary.BigEndian.PutUint32(buf[8+4*i:], b.ChunkOffset[i])
 	}

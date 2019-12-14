@@ -15,12 +15,16 @@ import (
 // This box describes the type of data contained in the trak.
 //
 // HandlerType can be : "vide" (video track), "soun" (audio track), "hint" (hint track), "meta" (timed Metadata track), "auxv" (auxiliary video track).
+// https://blog.csdn.net/yue_huang/article/details/72812109
 type HdlrBox struct {
-	Version     byte
-	Flags       [3]byte
-	PreDefined  uint32
-	HandlerType string
-	Name        string
+	Version                    byte
+	Flags                      [3]byte
+	ComponetType               uint32
+	ComponetSubType            uint32
+	ComponetSubTypeManufactuer uint32
+	ComponetFlags              uint32
+	ComponetFlagsMask          uint32
+	ComponetName               []byte
 }
 
 func DecodeHdlr(r io.Reader) (Box, error) {
@@ -29,11 +33,14 @@ func DecodeHdlr(r io.Reader) (Box, error) {
 		return nil, err
 	}
 	return &HdlrBox{
-		Version:     data[0],
-		Flags:       [3]byte{data[1], data[2], data[3]},
-		PreDefined:  binary.BigEndian.Uint32(data[4:8]),
-		HandlerType: string(data[8:12]),
-		Name:        string(data[24:]),
+		Version:                    data[0],
+		Flags:                      [3]byte{data[1], data[2], data[3]},
+		ComponetType:               binary.BigEndian.Uint32(data[4:8]),
+		ComponetSubType:            binary.BigEndian.Uint32(data[8:12]),
+		ComponetSubTypeManufactuer: binary.BigEndian.Uint32(data[12:16]),
+		ComponetFlags:              binary.BigEndian.Uint32(data[16:20]),
+		ComponetFlagsMask:          binary.BigEndian.Uint32(data[20:24]),
+		ComponetName:               data[24:],
 	}, nil
 }
 
@@ -42,7 +49,7 @@ func (b *HdlrBox) Type() string {
 }
 
 func (b *HdlrBox) Size() int {
-	return BoxHeaderSize + 24 + len(b.Name)
+	return BoxHeaderSize + 24 + len(b.ComponetName)
 }
 
 func (b *HdlrBox) Encode(w io.Writer) error {
@@ -53,9 +60,13 @@ func (b *HdlrBox) Encode(w io.Writer) error {
 	buf := makebuf(b)
 	buf[0] = b.Version
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
-	binary.BigEndian.PutUint32(buf[4:], b.PreDefined)
-	strtobuf(buf[8:], b.HandlerType, 4)
-	strtobuf(buf[24:], b.Name, len(b.Name))
+	binary.BigEndian.PutUint32(buf[4:], b.ComponetType)
+	binary.BigEndian.PutUint32(buf[8:], b.ComponetSubType)
+	binary.BigEndian.PutUint32(buf[12:], b.ComponetSubTypeManufactuer)
+	binary.BigEndian.PutUint32(buf[16:], b.ComponetFlags)
+	binary.BigEndian.PutUint32(buf[20:], b.ComponetFlagsMask)
+	copy(buf[24:], b.ComponetName)
+
 	_, err = w.Write(buf)
 	return err
 }

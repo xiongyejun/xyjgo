@@ -51,6 +51,7 @@ func init() {
 		"meta": DecodeMeta,
 		"mdat": DecodeMdat,
 		"free": DecodeFree,
+		"wide": DecodeWide,
 	}
 }
 
@@ -71,7 +72,7 @@ func DecodeHeader(r io.Reader) (BoxHeader, error) {
 		return BoxHeader{}, ErrTruncatedHeader
 	}
 	h := BoxHeader{string(buf[4:8]), binary.BigEndian.Uint32(buf[0:4])}
-	if h.Size == 0 {
+	if h.Size == 1 {
 		return BoxHeader{}, errors.New("larger size")
 	}
 	if h.Type == "uuid" {

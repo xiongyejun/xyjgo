@@ -17,6 +17,9 @@ import (
 //
 // This table lists the size of each sample. If all samples have the same size, it can be defined in the
 // SampleUniformSize attribute.
+// https://blog.csdn.net/yue_huang/article/details/72812109
+// 定义了每个sample的大小，它的类型是'stsz'，
+//包含了媒体中全部sample的数目和一张给出每个sample大小的表。这样，媒体数据自身就可以没有边框的限制。
 type StszBox struct {
 	Version           byte
 	Flags             [3]byte
