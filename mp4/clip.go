@@ -93,11 +93,12 @@ func (f *clipFilter) FilterMoov(m *MoovBox) error {
 	if f.err != nil {
 		return f.err
 	}
-	if f.begin > time.Second*time.Duration(m.Mvhd.Duration)/time.Duration(m.Mvhd.Timescale) {
+	second := time.Second * time.Duration(m.Mvhd.Duration) / time.Duration(m.Mvhd.Timescale)
+	if f.begin > second {
 		return ErrClipOutside
 	}
-	if f.end > time.Second*time.Duration(m.Mvhd.Duration)/time.Duration(m.Mvhd.Timescale) || f.end == f.begin {
-		f.end = time.Second * time.Duration(m.Mvhd.Duration) / time.Duration(m.Mvhd.Timescale)
+	if f.end > second || f.end == f.begin {
+		f.end = second
 	}
 	oldSize := m.Size()
 	f.chunks = []*chunk{}
@@ -113,12 +114,12 @@ func (f *clipFilter) FilterMoov(m *MoovBox) error {
 	}
 	f.updateDurations(m)
 	sort.Sort(f.chunks)
-	for _, c := range f.chunks {
-		sz := 0
-		for _, ssz := range c.samples {
-			sz += int(ssz)
-		}
-	}
+	//	for _, c := range f.chunks {
+	//		sz := 0
+	//		for _, ssz := range c.samples {
+	//			sz += int(ssz)
+	//		}
+	//	}
 	deltaOffset := m.Size() - oldSize
 	f.mdatSize = f.updateChunkOffsets(m, deltaOffset)
 	return nil
@@ -152,11 +153,15 @@ func (f *clipFilter) buildChunkList(tnum int, t *TrakBox) {
 			firstSample: uint32(ssi + 1),
 			firstTC:     stts.GetTimeCode(uint32(ssi+1), timescale),
 		}
+
+		// 找到c.index这个chunk在stsc中的下标
 		if sci < len(stsc.FirstChunk)-1 && c.index >= int(stsc.FirstChunk[sci+1]) {
 			sci++
 		}
 		c.descriptionID = stsc.SampleDescriptionID[sci]
 		samples := stsc.SamplesPerChunk[sci]
+
+		// 记录当前chunk所有sample的Size（byte长度）
 		for samples > 0 {
 			c.samples = append(c.samples, stsz.GetSampleSize(ssi+1))
 			ssi++
@@ -165,11 +170,15 @@ func (f *clipFilter) buildChunkList(tnum int, t *TrakBox) {
 		c.lastSample = uint32(ssi)
 		c.lastTC = stts.GetTimeCode(c.lastSample+1, timescale)
 		if stss != nil {
+			// 是否是关键帧
+			// sync sample atom确定media中的关键帧。对于压缩的媒体，关键帧是一系列压缩序列的开始帧，它的解压缩是不依赖于以前的帧。后续帧的解压缩依赖于这个关键帧。
+			//sync sample atom可以非常紧凑的标记媒体内的随机存取点。它包含一个sample序号表，表内的每一项严格按照sample的序号排列，说明了媒体中的哪一个sample是关键帧。如果此表不存在，说明每一个sample都是一个关键帧，是一个随机存取点。
 			for ski < len(stss.SampleNumber) && stss.SampleNumber[ski] < c.lastSample {
 				c.keyFrame = true
 				ski++
 			}
 		}
+
 		f.chunks = append(f.chunks, c)
 	}
 }
@@ -327,6 +336,7 @@ func (f *clipFilter) updateDurations(m *MoovBox) {
 				end = c.lastTC
 			}
 		}
+
 		t.Mdia.Mdhd.Duration = uint32((end - start) * time.Duration(t.Mdia.Mdhd.Timescale) / time.Second)
 		t.Tkhd.Duration = uint32((end - start) * time.Duration(timescale) / time.Second)
 		if t.Tkhd.Duration > m.Mvhd.Duration {

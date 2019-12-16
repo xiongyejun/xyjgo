@@ -9,6 +9,11 @@ import "io"
 // Status: decoded
 //
 // Contains all information about the media data.
+/*
+Mediaatoms定义了track的媒体类型和sample数据，例如音频或视频，描述sample数据的media handler component，media timescale and track duration以及media-and-track-specific 信息，例如音量和图形模式。它也可以包含一个引用，指明媒体数据存储在另一个文件中。也可以包含一个sample table atoms，指明sample description, duration, andbyte offset from the data reference for each media sample.
+
+Mediaatom 的类型是'mdia'。它是一个容器atom，必须包含一个mediaheader atom ('mdhd')，一个handlerreference ('hdlr')，一个媒体信息引用('minf')和用户数据atom('udta').
+*/
 type MdiaBox struct {
 	Mdhd *MdhdBox
 	Hdlr *HdlrBox

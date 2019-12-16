@@ -38,12 +38,14 @@ func DecodeStts(r io.Reader) (Box, error) {
 		SampleCount:     []uint32{},
 		SampleTimeDelta: []uint32{},
 	}
-	ec := binary.BigEndian.Uint32(data[4:8])
-	for i := 0; i < int(ec); i++ {
+
+	b.SampleCount = make([]uint32, b.NumberOfEntries)
+	b.SampleTimeDelta = make([]uint32, b.NumberOfEntries)
+	for i := 0; i < int(b.NumberOfEntries); i++ {
 		s_count := binary.BigEndian.Uint32(data[(8 + 8*i):(12 + 8*i)])
 		s_delta := binary.BigEndian.Uint32(data[(12 + 8*i):(16 + 8*i)])
-		b.SampleCount = append(b.SampleCount, s_count)
-		b.SampleTimeDelta = append(b.SampleTimeDelta, s_delta)
+		b.SampleCount[i] = s_count
+		b.SampleTimeDelta[i] = s_delta
 	}
 	return b, nil
 }
@@ -62,6 +64,8 @@ func (b *SttsBox) GetTimeCode(sample, timescale uint32) time.Duration {
 	sample--
 	var units uint32
 	i := 0
+	// sample这个数字之前所有“sample”的时间和
+	// 一直累加直到sample这个数字为止
 	for sample > 0 && i < len(b.SampleCount) {
 		if sample >= b.SampleCount[i] {
 			units += b.SampleCount[i] * b.SampleTimeDelta[i]
@@ -90,7 +94,7 @@ func (b *SttsBox) Encode(w io.Writer) error {
 	buf := makebuf(b)
 	buf[0] = b.Version
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
-	binary.BigEndian.PutUint32(buf[4:], b.NumberOfEntries)
+	binary.BigEndian.PutUint32(buf[4:], uint32(len(b.SampleCount)))
 	for i := range b.SampleCount {
 		binary.BigEndian.PutUint32(buf[8+8*i:], b.SampleCount[i])
 		binary.BigEndian.PutUint32(buf[12+8*i:], b.SampleTimeDelta[i])

@@ -11,6 +11,10 @@ import (
 // Contained in : Media Information Box (minf)
 //
 // Status: decoded
+/*
+Video  media information atoms是视频媒体的第一层atoms，包含其他的定义视频媒体数据的特性。
+Sound media information atoms是音频媒体的第一层atoms，包含其他的定义音频媒体数据的特性。
+*/
 type VmhdBox struct {
 	Version      byte
 	Flags        [3]byte

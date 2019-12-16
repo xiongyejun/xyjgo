@@ -30,6 +30,7 @@ func Decode(r io.Reader) (m *MP4, err error) {
 		boxes: []Box{},
 	}
 
+	var mdatSeek int64 = 0
 	var flag byte = 0
 	for flag != 0b00000111 {
 		h, err := DecodeHeader(r)
@@ -55,22 +56,32 @@ func Decode(r io.Reader) (m *MP4, err error) {
 			v.Mdat = box.(*MdatBox)
 			v.Mdat.ContentSize = h.Size - BoxHeaderSize
 			flag = flag | 0b00000100
-//			b := make([]byte,100)
-//			v.Mdat.r.Read(b)
-//			fmt.Printf("% x\n",b)
 			
 			if rs, ok := r.(io.Seeker); ok {				
 				rs.Seek(int64(v.Mdat.ContentSize), 1)
 			} else {
 				return nil, errors.New("Seeker err")
 			}
-			
+		}
+			// 记录mdat之前的box
+			if flag & 0b00000100 != 0b00000100 {
+				mdatSeek += int64(box.Size())
+			}
+	}
+	
+	mdatSeek += int64(BoxHeaderSize)
+	fmt.Printf("mdatSeek = %x\n",mdatSeek)
+	if rs, ok := v.Mdat.Reader().(io.Seeker); ok {				
+		if _,err := rs.Seek(mdatSeek, io.SeekStart); err != nil {
+			return nil,err
 		}
 	}
 	
-	if rs, ok := r.(io.Seeker); ok {				
-				rs.Seek(int64(v.Ftyp.Size()+v.Moov.Size()), 0)
-			}
+//	有的为什么还是没有跳过Mdat的Header
+//	var b []byte = make([]byte, 8) 
+//	v.Mdat.Reader().Read(b)
+//	fmt.Printf("% x\n", b)
+//	fmt.Printf("% s\n", b)
 			
 	return v, nil
 }

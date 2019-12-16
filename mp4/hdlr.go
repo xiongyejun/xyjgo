@@ -16,6 +16,9 @@ import (
 //
 // HandlerType can be : "vide" (video track), "soun" (audio track), "hint" (hint track), "meta" (timed Metadata track), "auxv" (auxiliary video track).
 // https://blog.csdn.net/yue_huang/article/details/72812109
+/*
+Handler reference atom 定义了描述此媒体数据的media handler component，类型是'hdlr'。在过去，handler reference atom也可以用来数据引用，但是现在，已经不允许这样使用了。一个media atom内的handler atom解释了媒体流的播放过程。例如，一个视频handler处理一个video track.
+*/
 type HdlrBox struct {
 	Version                    byte
 	Flags                      [3]byte

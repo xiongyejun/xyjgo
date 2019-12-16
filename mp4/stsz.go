@@ -23,7 +23,7 @@ import (
 type StszBox struct {
 	Version           byte
 	Flags             [3]byte
-	SampleUniformSize uint32
+	SampleUniformSize uint32 // 全部sample的数目。如果所有的sample有相同的长度，这个字段就是这个值。否则，这个字段的值就是0。那些长度存在sample size表中
 	SampleNumber      uint32
 	SampleSize        []uint32
 }
@@ -40,11 +40,10 @@ func DecodeStsz(r io.Reader) (Box, error) {
 		SampleNumber:      binary.BigEndian.Uint32(data[8:12]),
 		SampleSize:        []uint32{},
 	}
-	if len(data) > 12 {
-		for i := 0; i < int(b.SampleNumber); i++ {
-			sz := binary.BigEndian.Uint32(data[(12 + 4*i):(16 + 4*i)])
-			b.SampleSize = append(b.SampleSize, sz)
-		}
+	b.SampleSize = make([]uint32, b.SampleNumber)
+	for i := 0; i < int(b.SampleNumber); i++ {
+		sz := binary.BigEndian.Uint32(data[(12 + 4*i):(16 + 4*i)])
+		b.SampleSize[i] = sz
 	}
 	return b, nil
 }
@@ -83,7 +82,7 @@ func (b *StszBox) Encode(w io.Writer) error {
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
 	binary.BigEndian.PutUint32(buf[4:], b.SampleUniformSize)
 	if len(b.SampleSize) == 0 {
-		binary.BigEndian.PutUint32(buf[8:], b.SampleNumber)
+		binary.BigEndian.PutUint32(buf[8:], uint32(len(b.SampleSize)))
 	} else {
 		binary.BigEndian.PutUint32(buf[8:], uint32(len(b.SampleSize)))
 		for i := range b.SampleSize {

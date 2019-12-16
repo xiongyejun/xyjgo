@@ -19,12 +19,16 @@ import (
 //   * first chunk : all chunks starting at this index up to the next first chunk have the same sample count/description
 //   * samples per chunk : number of samples in the chunk
 //   * description id : description (see the sample description box - stsd)
+/*
+sample是媒体数据存储的单位，存储在media的chunk中，chunk和sample的长度均可互不相同
+1个chunk可以包含若干个sample
+*/
 type StscBox struct {
 	Version             byte
 	Flags               [3]byte
 	NumberOfEntries     uint32
-	FirstChunk          []uint32
-	SamplesPerChunk     []uint32
+	FirstChunk          []uint32 // 第1个chunk的index
+	SamplesPerChunk     []uint32 // 每个chunk包含的samlpe
 	SampleDescriptionID []uint32
 }
 
@@ -43,13 +47,16 @@ func DecodeStsc(r io.Reader) (Box, error) {
 		SampleDescriptionID: []uint32{},
 	}
 
+	b.FirstChunk = make([]uint32, b.NumberOfEntries)
+	b.SamplesPerChunk = make([]uint32, b.NumberOfEntries)
+	b.SampleDescriptionID = make([]uint32, b.NumberOfEntries)
 	for i := 0; i < int(b.NumberOfEntries); i++ {
 		fc := binary.BigEndian.Uint32(data[(8 + 12*i):(12 + 12*i)])
 		spc := binary.BigEndian.Uint32(data[(12 + 12*i):(16 + 12*i)])
 		sdi := binary.BigEndian.Uint32(data[(16 + 12*i):(20 + 12*i)])
-		b.FirstChunk = append(b.FirstChunk, fc)
-		b.SamplesPerChunk = append(b.SamplesPerChunk, spc)
-		b.SampleDescriptionID = append(b.SampleDescriptionID, sdi)
+		b.FirstChunk[i] = fc
+		b.SamplesPerChunk[i] = spc
+		b.SampleDescriptionID[i] = sdi
 	}
 	return b, nil
 }
@@ -77,7 +84,7 @@ func (b *StscBox) Encode(w io.Writer) error {
 	buf := makebuf(b)
 	buf[0] = b.Version
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
-	binary.BigEndian.PutUint32(buf[4:], b.NumberOfEntries)
+	binary.BigEndian.PutUint32(buf[4:], uint32(len(b.FirstChunk)))
 	for i := range b.FirstChunk {
 		binary.BigEndian.PutUint32(buf[8+12*i:], b.FirstChunk[i])
 		binary.BigEndian.PutUint32(buf[12+12*i:], b.SamplesPerChunk[i])

@@ -18,6 +18,9 @@ import (
 // Language is a ISO-639-2/T language code stored as 1bit padding + [3]int5
 
 // https://blog.csdn.net/yue_huang/article/details/72812109
+/*
+Media header 定义了媒体的特性，例如time scale和duration。它的类型是'mdhd'.
+*/
 type MdhdBox struct {
 	Version          byte
 	Flags            [3]byte

@@ -51,7 +51,11 @@ func init() {
 		"meta": DecodeMeta,
 		"mdat": DecodeMdat,
 		"free": DecodeFree,
-		"wide": DecodeWide,
+
+		"wide": DecodeUnknown,
+		"tref": DecodeUnknown,
+		"hmhd": DecodeUnknown,
+		"hnti": DecodeUnknown,
 	}
 }
 
@@ -78,6 +82,7 @@ func DecodeHeader(r io.Reader) (BoxHeader, error) {
 	if h.Type == "uuid" {
 		return BoxHeader{}, errors.New("uuid type")
 	}
+
 	return h, nil
 }
 
@@ -87,6 +92,7 @@ func EncodeHeader(b Box, w io.Writer) error {
 	binary.BigEndian.PutUint32(buf, uint32(b.Size()))
 	strtobuf(buf[4:], b.Type(), 4)
 	_, err := w.Write(buf)
+
 	return err
 }
 

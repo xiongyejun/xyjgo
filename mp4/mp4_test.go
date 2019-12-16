@@ -9,21 +9,20 @@ import (
 func Test_func(t *testing.T) {
 	var f *os.File
 	var err error
-	if f, err = os.Open("../1.mp4"); err != nil {
+	if f, err = os.Open("1.mp4"); err != nil {
 		t.Error(err)
 		return
 	}
 	defer f.Close()
 
-	m, err := Decode(f)
+	var m *MP4
+	if m, err = Decode(f); err != nil {
+		t.Error(err)
+		return
+	}
 
-	//	for i := range m.boxes {
-	//		t.Logf("%d type=%s, size=%d\n", i, m.boxes[i].Type(), m.boxes[i].Size())
-	//	}
-	//	t.Logf("%d\n", len(m.Moov.Trak))
-	//	return
+	ft := Clip((0*60+30)*time.Second, (0*60+40)*time.Second)
 
-	ft := Clip((0*60+5)*time.Second, 10*time.Second)
 	var fw *os.File
 	os.Remove("2.mp4")
 	if fw, err = os.OpenFile("2.mp4", os.O_CREATE|os.O_WRONLY, 0666); err != nil {

@@ -9,14 +9,18 @@ import "io"
 // Status: partially decoded (anything other than stsd, stts, stsc, stss, stsz, stco, ctts is ignored)
 //
 // The table contains all information relevant to data samples (times, chunks, sizes, ...)
+/*
+sample table
+存储媒体数据的单位是samples。一个sample是一系列按时间顺序排列的数据的一个element。Samples存储在media中的chunk内，可以有不同的durations。Chunk存储一个或者多个samples，是数据存取的基本单位，可以有不同的长度，一个chunk内的每个sample也可以有不同的长度。例如如下图，chunk 2和3不同的长度，chunk 2内的sample5和6的长度一样，但是sample 4和5，6的长度不同
+*/
 type StblBox struct {
-	Stsd *StsdBox
-	Stts *SttsBox
-	Stss *StssBox
-	Stsc *StscBox
-	Stsz *StszBox
-	Stco *StcoBox
-	Ctts *CttsBox
+	Stsd *StsdBox // sample description
+	Stts *SttsBox // time to sample
+	Stss *StssBox // sync sample box
+	Stsc *StscBox // sample to chunk box
+	Stsz *StszBox // sample size
+	Stco *StcoBox // chunk offset box
+	Ctts *CttsBox // composition time to sample box
 }
 
 func DecodeStbl(r io.Reader) (Box, error) {

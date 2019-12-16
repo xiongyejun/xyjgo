@@ -19,6 +19,9 @@ import (
 // Video pixels are not necessarily square.
 
 // https://blog.csdn.net/PirateLeo/article/details/7597892
+/*
+每个trak都包含了一个track header atom. Thetrack header atom 定义了一个track的特性，例如时间，空间和音量信息，它的类型是('tkhd').
+*/
 type TkhdBox struct {
 	Version          byte
 	Flags            [3]byte
@@ -32,7 +35,7 @@ type TkhdBox struct {
 	AlternateGroup   uint16 // should be int16
 	Volume           Fixed16
 	reserved3        uint16
-	Matrix           []byte
+	Matrix           []byte // 36
 	Width, Height    Fixed32
 }
 

@@ -21,7 +21,7 @@ type StcoBox struct {
 	Version          byte
 	Flags            [3]byte
 	ChunkOffsetCount uint32
-	ChunkOffset      []uint32
+	ChunkOffset      []uint32 // chunk在文件中的位置
 }
 
 func DecodeStco(r io.Reader) (Box, error) {
@@ -35,9 +35,10 @@ func DecodeStco(r io.Reader) (Box, error) {
 		ChunkOffsetCount: binary.BigEndian.Uint32(data[4:8]),
 		ChunkOffset:      []uint32{},
 	}
+	b.ChunkOffset = make([]uint32, b.ChunkOffsetCount)
 	for i := 0; i < int(b.ChunkOffsetCount); i++ {
 		chunk := binary.BigEndian.Uint32(data[(8 + 4*i):(12 + 4*i)])
-		b.ChunkOffset = append(b.ChunkOffset, chunk)
+		b.ChunkOffset[i] = chunk
 	}
 	return b, nil
 }
@@ -65,7 +66,8 @@ func (b *StcoBox) Encode(w io.Writer) error {
 	buf := makebuf(b)
 	buf[0] = b.Version
 	buf[1], buf[2], buf[3] = b.Flags[0], b.Flags[1], b.Flags[2]
-	binary.BigEndian.PutUint32(buf[4:], b.ChunkOffsetCount)
+	binary.BigEndian.PutUint32(buf[4:], uint32(len(b.ChunkOffset)))
+
 	for i := range b.ChunkOffset {
 		binary.BigEndian.PutUint32(buf[8+4*i:], b.ChunkOffset[i])
 	}

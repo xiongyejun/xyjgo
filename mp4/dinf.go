@@ -7,6 +7,9 @@ import "io"
 // Contained in : Media Information Box (minf) or Meta Box (meta)
 //
 // Status : decoded
+/*
+handler reference定义data handler component如何获取媒体数据，data handler用这些数据信息来解释媒体数据。Data information atoms的类型是'dinf'。它是一个容器atom，包含其他的子atom。
+*/
 type DinfBox struct {
 	Dref *DrefBox
 }

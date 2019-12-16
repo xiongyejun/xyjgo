@@ -7,6 +7,10 @@ import "io"
 // Contained in : Media Box (mdia)
 //
 // Status: partially decoded (hmhd - hint tracks - and nmhd - null media - are ignored)
+/*
+Media information atoms的类型是'minf'，存储了解释该track的媒体数据的handler-specific的信息。media handler用这些信息将媒体时间映射到媒体数据，并进行处理。它是一个容器atom，包含其他的子atom。
+这些信息是与媒体定义的数据类型特别对应的，而且media information atoms 的格式和内容也是与解释此媒体数据流的media handler 密切相关的。其他的media handler不知道如何解释这些信息。
+*/
 type MinfBox struct {
 	Vmhd *VmhdBox
 	Smhd *SmhdBox
