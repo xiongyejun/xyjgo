@@ -1,17 +1,10 @@
 package msxls
 
 import (
-	"bytes"
-	"encoding/binary"
 	"math"
 
 	"github.com/xiongyejun/xyjgo/ucs2"
 )
-
-func byte2struct(b []byte, pStruct interface{}) error {
-	buf := bytes.NewBuffer(b)
-	return binary.Read(buf, binary.LittleEndian, pStruct)
-}
 
 func byte2uint16(b []byte) (ret uint16) {
 	if b == nil {

@@ -31,7 +31,7 @@ func decodeDimensions(r record, wk *Workbook) (retI IRecord, err error) {
 		rwMac:    byte2uint32(buf[4:]),
 		colMic:   byte2uint16(buf[8:]),
 		colMac:   byte2uint16(buf[10:]),
-		reserved: byte2uint16(buf[10:]),
+		reserved: byte2uint16(buf[12:]),
 	}, nil
 }
 
