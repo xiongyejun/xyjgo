@@ -8,7 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
+
+	//	"runtime"
 	"strconv"
 	"strings"
 
@@ -326,7 +327,7 @@ func (me *DataStruct) show(pID int) (err error) {
 	}*/
 
 	//	fmt.Println(name)
-	return openFolderFile(name)
+	return playVdio(name)
 }
 
 // 删除已经释放的文件
@@ -339,14 +340,15 @@ func (me *DataStruct) deleteShow() {
 }
 
 // 使用cmd打开文件和文件夹
-func openFolderFile(path string) error {
+func playVdio(path string) error {
 	// 第4个参数，是作为start的title，不加的话有空格的path是打不开的
 	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd.exe", "/c", "start", "", `C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe`, path)
-	} else {
-		cmd = exec.Command("open", "-a", "/Applications/暴风影音.app", path)
-	}
+	//	if runtime.GOOS == "windows" {
+	//		cmd = exec.Command("cmd.exe", "/c", "start", "", `C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe`, path)
+	//	} else {
+	//		cmd = exec.Command("open", "-a", "/Applications/暴风影音.app", path)
+	//	}
+	cmd = exec.Command("ffplay", path)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
