@@ -33,6 +33,7 @@ func Test_func(t *testing.T) {
 	printhex(`%GOPATH%\bin\sendMail.exe`)
 }
 
+// [HKEY_CLASSES_ROOT\AllFilesystemObjects\shell\SendMail\command]
 // 可以先在注册表中导出1个项目看看
 // 注册表使用环境变量的时候，需要把类型设置为REG_EXPAND_SZ，但是regedit好像不能直接编辑
 // 用.reg文件导入的时候，又需要使用hex16进制数据，用printhex输出，最后的逗号不需要

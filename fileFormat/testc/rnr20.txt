@@ -1,0 +1,200 @@
+Microsoft (R) COFF/PE Dumper Version 14.16.27023.1
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\Windows\System32\rnr20.dll
+
+PE signature found
+
+File Type: DLL
+
+FILE HEADER VALUES
+            8664 machine (x64)
+               2 number of sections
+        4A5BE02C time date stamp Tue Jul 14 09:32:28 2009
+               0 file pointer to symbol table
+               0 number of symbols
+              F0 size of optional header
+            2022 characteristics
+                   Executable
+                   Application can handle large (>2GB) addresses
+                   DLL
+
+OPTIONAL HEADER VALUES
+             20B magic # (PE32+)
+            9.00 linker version
+               0 size of code
+             600 size of initialized data
+               0 size of uninitialized data
+               0 entry point
+            1000 base of code
+          400000 image base (0000000000400000 to 0000000000402FFF)
+            1000 section alignment
+             200 file alignment
+            6.01 operating system version
+            6.01 image version
+            6.01 subsystem version
+               0 Win32 version
+            3000 size of image
+             400 size of headers
+            55BD checksum
+               3 subsystem (Windows CUI)
+             140 DLL characteristics
+                   Dynamic base
+                   NX compatible
+           40000 size of stack reserve
+            1000 size of stack commit
+          100000 size of heap reserve
+            1000 size of heap commit
+               0 loader flags
+              10 number of directories
+            1000 [      5A] RVA [size] of Export Directory
+               0 [       0] RVA [size] of Import Directory
+            2000 [     3F8] RVA [size] of Resource Directory
+               0 [       0] RVA [size] of Exception Directory
+               0 [       0] RVA [size] of Certificates Directory
+               0 [       0] RVA [size] of Base Relocation Directory
+            105C [      38] RVA [size] of Debug Directory
+               0 [       0] RVA [size] of Architecture Directory
+               0 [       0] RVA [size] of Global Pointer Directory
+               0 [       0] RVA [size] of Thread Storage Directory
+               0 [       0] RVA [size] of Load Configuration Directory
+               0 [       0] RVA [size] of Bound Import Directory
+               0 [       0] RVA [size] of Import Address Table Directory
+               0 [       0] RVA [size] of Delay Import Directory
+               0 [       0] RVA [size] of COM Descriptor Directory
+               0 [       0] RVA [size] of Reserved Directory
+
+
+SECTION HEADER #1
+  .rdata name
+      BA virtual size
+    1000 virtual address (0000000000401000 to 00000000004010B9)
+     200 size of raw data
+     400 file pointer to raw data (00000400 to 000005FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40000040 flags
+         Initialized Data
+         Read Only
+
+RAW DATA #1
+  0000000000401000: 00 00 00 00 F4 CC 5B 4A 00 00 00 00 32 10 00 00  ....?им[J....2...
+  0000000000401010: 01 00 00 00 01 00 00 00 01 00 00 00 28 10 00 00  ............(...
+  0000000000401020: 2C 10 00 00 30 10 00 00 47 10 00 00 3C 10 00 00  ,...0...G...<...
+  0000000000401030: 00 00 52 4E 52 32 30 2E 64 6C 6C 00 4E 53 50 53  ..RNR20.dll.NSPS
+  0000000000401040: 74 61 72 74 75 70 00 4D 53 57 53 4F 43 4B 2E 4E  tartup.MSWSOCK.N
+  0000000000401050: 53 50 53 74 61 72 74 75 70 00 00 00 00 00 00 00  SPStartup.......
+  0000000000401060: F4 CC 5B 4A 00 00 00 00 02 00 00 00 22 00 00 00  ?им[J........"...
+  0000000000401070: 98 10 00 00 98 04 00 00 00 00 00 00 F4 CC 5B 4A  ............?им[J
+  0000000000401080: 35 02 7E 19 0A 00 00 00 04 00 00 00 94 10 00 00  5.~.............
+  0000000000401090: 94 04 00 00 7E 19 03 BB 52 53 44 53 88 A9 B0 01  ....~..?RSDS.?бу.
+  00000000004010A0: 2B 18 F8 41 AD 83 A0 C5 9B 95 53 DC 02 00 00 00  +.?A-..?..Sи╣....
+  00000000004010B0: 72 6E 72 32 30 2E 70 64 62 00                    rnr20.pdb.
+
+  Debug Directories
+
+        Time Type        Size      RVA  Pointer
+    -------- ------- -------- -------- --------
+    4A5BCCF4 cv            22 00001098      498    Format: RSDS, {01B0A988-182B-41F8-AD83-A0C59B9553DC}, 2, rnr20.pdb
+    4A5BCCF4 (   A)         4 00001094      494    BB03197E
+
+  Section contains the following exports for RNR20.dll
+
+    00000000 characteristics
+    4A5BCCF4 time date stamp Tue Jul 14 08:10:28 2009
+        0.00 version
+           1 ordinal base
+           1 number of functions
+           1 number of names
+
+    ordinal hint RVA      name
+
+          1    0          NSPStartup (forwarded to MSWSOCK.NSPStartup)
+
+SECTION HEADER #2
+   .rsrc name
+     3F8 virtual size
+    2000 virtual address (0000000000402000 to 00000000004023F7)
+     400 size of raw data
+     600 file pointer to raw data (00000600 to 000009FF)
+       0 file pointer to relocation table
+       0 file pointer to line numbers
+       0 number of relocations
+       0 number of line numbers
+40000040 flags
+         Initialized Data
+         Read Only
+
+RAW DATA #2
+  0000000000402000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00  ................
+  0000000000402010: 10 00 00 00 18 00 00 80 00 00 00 00 00 00 00 00  ................
+  0000000000402020: 00 00 00 00 00 00 01 00 01 00 00 00 30 00 00 80  ............0...
+  0000000000402030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00  ................
+  0000000000402040: 09 04 00 00 48 00 00 00 60 20 00 00 98 03 00 00  ....H...` ......
+  0000000000402050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0000000000402060: 98 03 34 00 00 00 56 00 53 00 5F 00 56 00 45 00  ..4...V.S._.V.E.
+  0000000000402070: 52 00 53 00 49 00 4F 00 4E 00 5F 00 49 00 4E 00  R.S.I.O.N._.I.N.
+  0000000000402080: 46 00 4F 00 00 00 00 00 BD 04 EF FE 00 00 01 00  F.O.....?.?t....
+  0000000000402090: 01 00 06 00 01 40 B0 1D 01 00 06 00 01 40 B0 1D  .....@бу......@бу.
+  00000000004020A0: 3F 00 00 00 00 00 00 00 04 00 04 00 02 00 00 00  ?...............
+  00000000004020B0: 00 00 00 00 00 00 00 00 00 00 00 00 F6 02 00 00  ............?...
+  00000000004020C0: 01 00 53 00 74 00 72 00 69 00 6E 00 67 00 46 00  ..S.t.r.i.n.g.F.
+  00000000004020D0: 69 00 6C 00 65 00 49 00 6E 00 66 00 6F 00 00 00  i.l.e.I.n.f.o...
+  00000000004020E0: D2 02 00 00 01 00 30 00 34 00 30 00 39 00 30 00  и░.....0.4.0.9.0.
+  00000000004020F0: 34 00 42 00 30 00 00 00 4C 00 16 00 01 00 43 00  4.B.0...L.....C.
+  0000000000402100: 6F 00 6D 00 70 00 61 00 6E 00 79 00 4E 00 61 00  o.m.p.a.n.y.N.a.
+  0000000000402110: 6D 00 65 00 00 00 00 00 4D 00 69 00 63 00 72 00  m.e.....M.i.c.r.
+  0000000000402120: 6F 00 73 00 6F 00 66 00 74 00 20 00 43 00 6F 00  o.s.o.f.t. .C.o.
+  0000000000402130: 72 00 70 00 6F 00 72 00 61 00 74 00 69 00 6F 00  r.p.o.r.a.t.i.o.
+  0000000000402140: 6E 00 00 00 64 00 1E 00 01 00 46 00 69 00 6C 00  n...d.....F.i.l.
+  0000000000402150: 65 00 44 00 65 00 73 00 63 00 72 00 69 00 70 00  e.D.e.s.c.r.i.p.
+  0000000000402160: 74 00 69 00 6F 00 6E 00 00 00 00 00 57 00 69 00  t.i.o.n.....W.i.
+  0000000000402170: 6E 00 64 00 6F 00 77 00 73 00 20 00 53 00 6F 00  n.d.o.w.s. .S.o.
+  0000000000402180: 63 00 6B 00 65 00 74 00 32 00 20 00 4E 00 61 00  c.k.e.t.2. .N.a.
+  0000000000402190: 6D 00 65 00 53 00 70 00 61 00 63 00 65 00 20 00  m.e.S.p.a.c.e. .
+  00000000004021A0: 44 00 4C 00 4C 00 00 00 6C 00 26 00 01 00 46 00  D.L.L...l.&...F.
+  00000000004021B0: 69 00 6C 00 65 00 56 00 65 00 72 00 73 00 69 00  i.l.e.V.e.r.s.i.
+  00000000004021C0: 6F 00 6E 00 00 00 00 00 36 00 2E 00 31 00 2E 00  o.n.....6...1...
+  00000000004021D0: 37 00 36 00 30 00 30 00 2E 00 31 00 36 00 33 00  7.6.0.0...1.6.3.
+  00000000004021E0: 38 00 35 00 20 00 28 00 77 00 69 00 6E 00 37 00  8.5. .(.w.i.n.7.
+  00000000004021F0: 5F 00 72 00 74 00 6D 00 2E 00 30 00 39 00 30 00  _.r.t.m...0.9.0.
+  0000000000402200: 37 00 31 00 33 00 2D 00 31 00 32 00 35 00 35 00  7.1.3.-.1.2.5.5.
+  0000000000402210: 29 00 00 00 34 00 0A 00 01 00 49 00 6E 00 74 00  )...4.....I.n.t.
+  0000000000402220: 65 00 72 00 6E 00 61 00 6C 00 4E 00 61 00 6D 00  e.r.n.a.l.N.a.m.
+  0000000000402230: 65 00 00 00 72 00 6E 00 72 00 32 00 30 00 2E 00  e...r.n.r.2.0...
+  0000000000402240: 64 00 6C 00 6C 00 00 00 80 00 2E 00 01 00 4C 00  d.l.l.........L.
+  0000000000402250: 65 00 67 00 61 00 6C 00 43 00 6F 00 70 00 79 00  e.g.a.l.C.o.p.y.
+  0000000000402260: 72 00 69 00 67 00 68 00 74 00 00 00 A9 00 20 00  r.i.g.h.t...?. .
+  0000000000402270: 4D 00 69 00 63 00 72 00 6F 00 73 00 6F 00 66 00  M.i.c.r.o.s.o.f.
+  0000000000402280: 74 00 20 00 43 00 6F 00 72 00 70 00 6F 00 72 00  t. .C.o.r.p.o.r.
+  0000000000402290: 61 00 74 00 69 00 6F 00 6E 00 2E 00 20 00 41 00  a.t.i.o.n... .A.
+  00000000004022A0: 6C 00 6C 00 20 00 72 00 69 00 67 00 68 00 74 00  l.l. .r.i.g.h.t.
+  00000000004022B0: 73 00 20 00 72 00 65 00 73 00 65 00 72 00 76 00  s. .r.e.s.e.r.v.
+  00000000004022C0: 65 00 64 00 2E 00 00 00 3C 00 0A 00 01 00 4F 00  e.d.....<.....O.
+  00000000004022D0: 72 00 69 00 67 00 69 00 6E 00 61 00 6C 00 46 00  r.i.g.i.n.a.l.F.
+  00000000004022E0: 69 00 6C 00 65 00 6E 00 61 00 6D 00 65 00 00 00  i.l.e.n.a.m.e...
+  00000000004022F0: 72 00 6E 00 72 00 32 00 30 00 2E 00 64 00 6C 00  r.n.r.2.0...d.l.
+  0000000000402300: 6C 00 00 00 6A 00 25 00 01 00 50 00 72 00 6F 00  l...j.%...P.r.o.
+  0000000000402310: 64 00 75 00 63 00 74 00 4E 00 61 00 6D 00 65 00  d.u.c.t.N.a.m.e.
+  0000000000402320: 00 00 00 00 4D 00 69 00 63 00 72 00 6F 00 73 00  ....M.i.c.r.o.s.
+  0000000000402330: 6F 00 66 00 74 00 AE 00 20 00 57 00 69 00 6E 00  o.f.t.?. .W.i.n.
+  0000000000402340: 64 00 6F 00 77 00 73 00 AE 00 20 00 4F 00 70 00  d.o.w.s.?. .O.p.
+  0000000000402350: 65 00 72 00 61 00 74 00 69 00 6E 00 67 00 20 00  e.r.a.t.i.n.g. .
+  0000000000402360: 53 00 79 00 73 00 74 00 65 00 6D 00 00 00 00 00  S.y.s.t.e.m.....
+  0000000000402370: 42 00 0F 00 01 00 50 00 72 00 6F 00 64 00 75 00  B.....P.r.o.d.u.
+  0000000000402380: 63 00 74 00 56 00 65 00 72 00 73 00 69 00 6F 00  c.t.V.e.r.s.i.o.
+  0000000000402390: 6E 00 00 00 36 00 2E 00 31 00 2E 00 37 00 36 00  n...6...1...7.6.
+  00000000004023A0: 30 00 30 00 2E 00 31 00 36 00 33 00 38 00 35 00  0.0...1.6.3.8.5.
+  00000000004023B0: 00 00 00 00 44 00 00 00 01 00 56 00 61 00 72 00  ....D.....V.a.r.
+  00000000004023C0: 46 00 69 00 6C 00 65 00 49 00 6E 00 66 00 6F 00  F.i.l.e.I.n.f.o.
+  00000000004023D0: 00 00 00 00 24 00 04 00 00 00 54 00 72 00 61 00  ....$.....T.r.a.
+  00000000004023E0: 6E 00 73 00 6C 00 61 00 74 00 69 00 6F 00 6E 00  n.s.l.a.t.i.o.n.
+  00000000004023F0: 00 00 00 00 09 04 B0 04                          ......бу.
+
+  Summary
+
+        1000 .rdata
+        1000 .rsrc
