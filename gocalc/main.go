@@ -33,14 +33,14 @@ func main() {
 	fmt.Println("中缀表达式:", arr)
 	var err error
 	if arr, err = rePolish.RePolish(arr); err != nil {
-		fmt.Println(err)
+		fmt.Println("RePolish err", err)
 		return
 	}
 	fmt.Println("后缀表达式:", arr)
 
 	var f float64
 	if f, err = rePolish.Calc(arr); err != nil {
-		fmt.Println(err)
+		fmt.Println("Calc", err)
 		return
 	}
 	fmt.Printf("计算结果为: %f\n", f)

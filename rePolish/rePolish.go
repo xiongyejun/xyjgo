@@ -3,29 +3,33 @@ package rePolish
 
 import (
 	"errors"
+	"math"
 	"strconv"
 
 	"github.com/xiongyejun/xyjgo/stack"
 )
 
 const (
-	OP_L_括号 int = 0
-	OP_R_括号 int = 1
+	op_L_括号 int = 0
+	op_R_括号 int = 1
 
-	OP_ADD int = 2
-	OP_SUB int = OP_ADD
+	op_ADD int = 2
+	op_SUB int = op_ADD
 
-	OP_MUL int = 3
-	OP_除   int = OP_MUL
+	op_MUL int = 3
+	op_除   int = op_MUL
+
+	op_幂 int = 4
 )
 
 var mOp map[string]int = map[string]int{
-	"+": OP_ADD,
-	"-": OP_SUB,
-	"*": OP_MUL,
-	"/": OP_除,
-	"(": OP_L_括号,
-	")": OP_R_括号,
+	"+": op_ADD,
+	"-": op_SUB,
+	"*": op_MUL,
+	"/": op_除,
+	"(": op_L_括号,
+	")": op_R_括号,
+	"^": op_幂,
 }
 
 func RePolish(str []string) (ret []string, err error) {
@@ -38,9 +42,9 @@ func RePolish(str []string) (ret []string, err error) {
 
 		if op, ok := mOp[tmp]; ok {
 			switch op {
-			case OP_L_括号:
+			case op_L_括号:
 				s.Push("(")
-			case OP_R_括号:
+			case op_R_括号:
 				// 找到左括号为止
 				for {
 					if itf, err = s.Pop(); err != nil {
@@ -121,6 +125,11 @@ func Calc(str []string) (ret float64, err error) {
 				return
 			}
 			s.Push(f2 / f1)
+		case "^":
+			if f1, f2, err = getTwoValue(s); err != nil {
+				return
+			}
+			s.Push(math.Pow(f2, f1))
 
 		default:
 			// 操作数入stack
@@ -131,7 +140,7 @@ func Calc(str []string) (ret float64, err error) {
 		return
 	}
 
-	return Itf2Float(itf)
+	return itf2Float(itf)
 }
 
 func getTwoValue(s *stack.Stack) (f1, f2 float64, err error) {
@@ -140,7 +149,7 @@ func getTwoValue(s *stack.Stack) (f1, f2 float64, err error) {
 		return
 	}
 
-	if f1, err = Itf2Float(itf); err != nil {
+	if f1, err = itf2Float(itf); err != nil {
 		return
 	}
 
@@ -148,14 +157,14 @@ func getTwoValue(s *stack.Stack) (f1, f2 float64, err error) {
 		return
 	}
 
-	if f2, err = Itf2Float(itf); err != nil {
+	if f2, err = itf2Float(itf); err != nil {
 		return
 	}
 
 	return
 }
 
-func Itf2Float(itf interface{}) (ret float64, err error) {
+func itf2Float(itf interface{}) (ret float64, err error) {
 	switch itf.(type) {
 	case string:
 		ret, err = strconv.ParseFloat(itf.(string), 64)
