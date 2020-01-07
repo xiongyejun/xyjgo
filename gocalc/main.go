@@ -15,12 +15,13 @@ func main() {
 	}
 
 	var str = os.Args[1]
+	fmt.Println("输入表达式:", str)
 	str = strings.Replace(str, " ", "", -1)
 	var arr []string
 	for i := 0; i < len(str); i++ {
-		if str[i] >= '0' && str[i] <= '9' {
+		if (str[i] >= '0' && str[i] <= '9') || str[i] == '.' {
 			var j int = i + 1
-			for j < len(str) && (str[j] >= '0' && str[j] <= '9') {
+			for j < len(str) && ((str[j] >= '0' && str[j] <= '9') || str[j] == '.') {
 				j++
 			}
 			arr = append(arr, string(str[i:j]))
