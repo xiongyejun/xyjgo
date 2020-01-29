@@ -108,6 +108,7 @@ func (me *BaiDu) get_access_token() (err error) {
 	   error： 错误码；关于错误码的详细信息请参考下方鉴权认证错误码。
 	   error_description： 错误描述信息，帮助理解和解决发生的错误。
 	*/
+	// 点网页里的右上角，控制台进入对应的应用可以查看
 	var client_id string = "E4AEhxW2bXR0P6qFlVMQ2GtR"
 	var client_secret string = "oxBVuCaeCANY6rZF9CaGlz6zhvIC3bFg"
 

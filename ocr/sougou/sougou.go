@@ -24,7 +24,7 @@ func init() {
 
 }
 
-func (me *SouGou) ConvPic(picPath string) (ret string, err error) {
+func (me *SouGou) OCR(picPath string) (ret string, err error) {
 	var b []byte
 	// 上传图片
 	if b, err = httpPost("http://pic.sogou.com/pic/upload_pic.jsp", "pic_path="+picPath); err != nil {
