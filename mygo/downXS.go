@@ -9,7 +9,7 @@ import (
 )
 
 var ch chan int
-var herf string = "https://www.zhuaji.org/"
+var herf string = "http://www.jinyongwang.com/"
 
 //  下载小说
 func (me *dirInfos) downXS() {
@@ -85,7 +85,7 @@ type dirInfos struct {
 
 // 根据正则提取目录中记录的每一个章节的地址和名称
 func getDir(bHtml []byte) (ret dirInfos, err error) {
-	str_patten := `<dd><a href="/(.*?)">(.*?)</a></dd>`
+	str_patten := `<li><a href="/(.*?)">(.*?)</a></li>` // (.*?)
 	var reg *regexp.Regexp
 	if reg, err = regexp.Compile(str_patten); err != nil {
 		return

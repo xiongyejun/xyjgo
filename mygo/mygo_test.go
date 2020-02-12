@@ -16,15 +16,14 @@ func Test_func(t *testing.T) {
 }
 
 func testEpub() (err error) {
-	if err = createEpub("/Users/xiongyejun/01-GitHub/08-go/src/github.com/xiongyejun/xyjgo/tmp/srcHtml/", "fan.epub", "凡人修仙传"); err != nil {
+	if err = createEpub("srcHtml/", "白马啸西风.epub", "白马啸西风", "金庸"); err != nil {
 		return
 	}
 	return
 
 }
 func testDown() (err error) {
-	var b []byte
-	b, err = ioutil.ReadFile("dirjosn.txt")
+	b, err := ioutil.ReadFile("dirJson.txt")
 	if err != nil {
 		return
 	}
@@ -33,8 +32,10 @@ func testDown() (err error) {
 		return
 	}
 	di.downXS()
-	<-ch
-	<-ch
+	for i := range di.DirInfos {
+		<-ch
+		i++
+	}
 	return
 }
 func testGetDir() (err error) {
