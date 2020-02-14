@@ -1,5 +1,4 @@
 // 翻译
-
 package main
 
 import (
@@ -9,14 +8,22 @@ import (
 	"strings"
 
 	"github.com/xiongyejun/xyjgo/colorPrint"
-	"github.com/xiongyejun/xyjgo/translate"
+	"github.com/xiongyejun/xyjgo/translate/baidu"
+	"github.com/xiongyejun/xyjgo/translate/google"
+	"github.com/xiongyejun/xyjgo/translate/youdao"
 )
 
-var tsl translate.ITranslate
+type ITranslate interface {
+	Translate(value string) (ret string, err error)
+	Speak(value string) (err error)
+}
+
+var tsl ITranslate
+var strTSL string = "google"
 
 func main() {
 	var err error
-	if tsl, err = translate.NewYouDao(); err != nil {
+	if tsl, err = google.New(); err != nil {
 		fmt.Println(err)
 		return
 	}
@@ -31,7 +38,6 @@ func main() {
 			break
 		}
 		tokens := strings.Split(line, " ")
-		printCmd()
 		handleCommands(tokens)
 	}
 
@@ -39,26 +45,36 @@ func main() {
 
 func handleCommands(tokens []string) {
 	switch tokens[0] {
-	case "printCmd":
+	case "help":
 		printCmd()
 	case "baidu":
 		var err error
-		if tsl, err = translate.NewBaiDu(); err != nil {
+		if tsl, err = baidu.New(); err != nil {
 			fmt.Println(err)
 			return
 		}
+		strTSL = "baidu"
 	case "youdao":
 		var err error
-		if tsl, err = translate.NewYouDao(); err != nil {
+		if tsl, err = youdao.New(); err != nil {
 			fmt.Println(err)
 			return
 		}
+		strTSL = "youdao"
+	case "google":
+		var err error
+		if tsl, err = google.New(); err != nil {
+			fmt.Println(err)
+			return
+		}
+		strTSL = "google"
 
 	default:
-		if ret, err := tsl.Translate(strings.Join(tokens, " "), true); err != nil {
+		if ret, err := tsl.Translate(strings.Join(tokens, " ")); err != nil {
 			fmt.Println(err)
 		} else {
 			colorPrint.SetColor(colorPrint.White, colorPrint.DarkMagenta)
+			fmt.Println(strTSL, "翻译：")
 			fmt.Println(ret)
 			colorPrint.ReSetColor()
 		}
@@ -70,9 +86,10 @@ func printCmd() {
 
 	fmt.Println(` Enter following commands to control:
 	
- printCmd -- 查看命令
+ help -- 查看命令
  baidu -- baidu翻译
- youdao -- youdao翻译(默认)
+ youdao -- youdao翻译
+ google -- google翻译(默认)
 `)
 	colorPrint.ReSetColor()
 }

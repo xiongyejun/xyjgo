@@ -1,5 +1,5 @@
 // http://api.fanyi.baidu.com/api/trans/product/apidoc
-package translate
+package baidu
 
 import (
 	"crypto/md5"
@@ -10,10 +10,12 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/xiongyejun/xyjgo/translate"
 )
 
 type baiDu struct {
-	tsl
+	translate.Tsl
 
 	q     string
 	from  string
@@ -39,16 +41,31 @@ type BaiduS0 struct {
 	Trans_result []BaiduS1 `json:"trans_result"`
 }
 
-func NewBaiDu() (b *baiDu, err error) {
+var baiduErr map[string]string = map[string]string{
+	"52000": "成功",
+	"52001": "请求超时",
+	"52002": "系统错误",
+	"52003": "未授权用户",
+	"54000": "必填参数为空",
+	"54001": "签名错误",
+	"54003": "访问频率受限",
+	"54004": "账户余额不足",
+	"54005": "长query请求频繁",
+	"58000": "客户端IP非法",
+	"58001": "译文语言方向不支持",
+	"58002": "服务当前已关闭",
+}
+
+func New() (b *baiDu, err error) {
 	b = new(baiDu)
-	b.url = "http://api.fanyi.baidu.com/api/trans/vip/translate"
+	b.URL = "http://api.fanyi.baidu.com/api/trans/vip/translate"
 	b.appid = "20190421000290122"
 	b.key = "OmV8zMcBZTSHzztWrLNY"
 
 	return
 }
 
-func (me *baiDu) Translate(value string, bSpeak bool) (ret string, err error) {
+func (me *baiDu) Translate(value string) (ret string, err error) {
 	var sPost []string = make([]string, 0)
 
 	me.q = value
@@ -72,7 +89,7 @@ func (me *baiDu) Translate(value string, bSpeak bool) (ret string, err error) {
 	strPost := strings.Join(sPost, "&")
 
 	var b []byte
-	if b, err = httpPost(me.url, strPost); err != nil {
+	if b, err = translate.HttpPost(me.URL, strPost); err != nil {
 		return
 	}
 
@@ -127,6 +144,6 @@ func (me *baiDu) getSign() (err error) {
 
 	return
 }
-func (me *baiDu) speak(value string) (err error) {
+func (me *baiDu) Speak(value string) (err error) {
 	return errors.New("未实现")
 }

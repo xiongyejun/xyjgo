@@ -1,22 +1,18 @@
-package translate
+package youdao
 
 import (
 	"errors"
 	"runtime"
 
-	// "crypto/sha1"
-	// "encoding/hex"
 	"encoding/json"
-	// "errors"
-	// "fmt"
-	// "io/ioutil"
 	"net/url"
 	"os"
-	// "github.com/xiongyejun/xyjgo/winAPI/playMP3"
+
+	"github.com/xiongyejun/xyjgo/translate"
 )
 
 type youDao struct {
-	tsl
+	translate.Tsl
 }
 
 type s1 struct {
@@ -30,24 +26,24 @@ type s0 struct {
 	ElapsedTime     float64 `json:"ElapsedTime"`
 }
 
-func NewYouDao() (y *youDao, err error) {
+func New() (y *youDao, err error) {
 	y = new(youDao)
-	y.url = "http://fanyi.youdao.com/translate"
+	y.URL = "http://fanyi.youdao.com/translate"
 	//	y.mp3URL = "http://dict.youdao.com/dictvoice?audio=" // + value + &type=2
-	y.mp3URL = "http://tts.youdao.com/fanyivoice?" // + &le=eng&keyfrom=speaker-target
+	y.Mp3URL = "http://tts.youdao.com/fanyivoice?" // + &le=eng&keyfrom=speaker-target
 
 	switch runtime.GOOS {
 	case "darwin":
-		y.mp3SavePath = os.Getenv("HOME") + `/YouDaoMP3/`
-	case "window":
-		y.mp3SavePath = os.Getenv("USERPROFILE") + `\YouDaoMP3\`
+		y.Mp3SavePath = os.Getenv("HOME") + `/YouDaoMP3/`
+	case "windows":
+		y.Mp3SavePath = os.Getenv("USERPROFILE") + `\YouDaoMP3\`
 	default:
 		return nil, errors.New("未知系统.")
 	}
 
 	// 检查文件夹是否存在
-	if _, err = os.Stat(y.mp3SavePath); err != nil {
-		if err = os.Mkdir(y.mp3SavePath, 0666); err != nil {
+	if _, err = os.Stat(y.Mp3SavePath); err != nil {
+		if err = os.Mkdir(y.Mp3SavePath, 0666); err != nil {
 			return
 		}
 	}
@@ -56,10 +52,10 @@ func NewYouDao() (y *youDao, err error) {
 }
 
 // 翻译
-func (me *youDao) Translate(value string, bSpeak bool) (ret string, err error) {
+func (me *youDao) Translate(value string) (ret string, err error) {
 	var b []byte
 	// var tgt string
-	if b, err = httpPost(me.url, "i="+value+"&doctype=json"); err != nil {
+	if b, err = translate.HttpPost(me.URL, "i="+value+"&doctype=json"); err != nil {
 		return
 	}
 
@@ -67,24 +63,11 @@ func (me *youDao) Translate(value string, bSpeak bool) (ret string, err error) {
 		return
 	}
 
-	// if bSpeak {
-	// 	go func(value string, tgt string) {
-	// 		var speakValue string = tgt
-	// 		if (value[0] >= 'a' && value[0] <= 'z') || (value[0] >= 'A' && value[0] <= 'Z') {
-	// 			speakValue = value
-	// 		}
-	// 		if err = me.speak(speakValue); err != nil {
-	// 			fmt.Println(errors.New("speak出错：" + err.Error()))
-	// 		}
-	// 	}(value, tgt)
-
-	// }
-
 	return ret, nil
 }
 
 // // 朗读
-func (me *youDao) speak(value string) (err error) {
+func (me *youDao) Speak(value string) (err error) {
 	// 	// 名称都用sha1保存
 	// 	sha := sha1.New()
 	// 	if _, err = sha.Write([]byte(value)); err != nil {
@@ -116,7 +99,7 @@ func (me *youDao) speak(value string) (err error) {
 func (me *youDao) getMP3(value string) (bMP3 []byte, err error) {
 	u := url.Values{}
 	u.Set("word", value)
-	return httpGet(me.mp3URL + u.Encode() + "&le=eng&keyfrom=speaker-target")
+	return translate.HttpGet(me.Mp3URL + u.Encode() + "&le=eng&keyfrom=speaker-target")
 }
 
 // 获取翻译需要的信息
