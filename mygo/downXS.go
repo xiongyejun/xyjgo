@@ -9,10 +9,32 @@ import (
 )
 
 var ch chan int
-var herf string = "http://www.jinyongwang.com/"
+var herf string
+
+func (me *DownSet) down() (err error) {
+	var b []byte
+
+	if b, err = ioutil.ReadFile(me.DirInfoJsonFile); err != nil {
+		return
+	}
+
+	herf = me.PreHerf
+
+	var di dirInfos = dirInfos{}
+	if err = json.Unmarshal(b, &di); err != nil {
+		return
+	}
+	di.down()
+
+	for i := range di.DirInfos {
+		<-ch
+		i++
+	}
+	return
+}
 
 //  下载小说
-func (me *dirInfos) downXS() {
+func (me *dirInfos) down() {
 	ch = make(chan int, 50)
 
 	fmt.Printf("开始下载，总共%d个。\n", len(me.DirInfos))
@@ -84,10 +106,13 @@ type dirInfos struct {
 }
 
 // 根据正则提取目录中记录的每一个章节的地址和名称
-func getDir(bHtml []byte) (ret dirInfos, err error) {
-	str_patten := `<li><a href="/(.*?)">(.*?)</a></li>` // (.*?)
+func (me *DirSet) getDirInfo() (ret dirInfos, err error) {
 	var reg *regexp.Regexp
-	if reg, err = regexp.Compile(str_patten); err != nil {
+	if reg, err = regexp.Compile(me.Expr); err != nil {
+		return
+	}
+	var bHtml []byte
+	if bHtml, err = ioutil.ReadFile(me.DirHtmlFile); err != nil {
 		return
 	}
 	bbb := reg.FindAllSubmatch(bHtml, -1)
@@ -100,7 +125,7 @@ func getDir(bHtml []byte) (ret dirInfos, err error) {
 
 func (me *dirInfos) saveJsonTxt(path string) (err error) {
 	var b []byte
-	if b, err = json.MarshalIndent(me, "\t", "\t"); err != nil {
+	if b, err = json.MarshalIndent(me, "", "\t"); err != nil {
 		return
 	}
 	return ioutil.WriteFile(path, b, 0666)

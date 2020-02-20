@@ -1,58 +1,28 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"regexp"
 	"testing"
 )
 
 func Test_func(t *testing.T) {
 	var err error
-	err = testEpub()
+	err = testRegexp()
 
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func testEpub() (err error) {
-	if err = createEpub("srcHtml/", "白马啸西风.epub", "白马啸西风", "金庸"); err != nil {
+func testRegexp() (err error) {
+	var exp string = `(?i)(落.*?霞.*?l.*?u.*?o.*?.*?c.*?o.*?m)`
+	var str string = `</p><p> 🌵 落+霞-小+說 L U ox i a - c o m +</p>`
+	var reg *regexp.Regexp
+	if reg, err = regexp.Compile(exp); err != nil {
 		return
 	}
-	return
-
-}
-func testDown() (err error) {
-	b, err := ioutil.ReadFile("dirJson.txt")
-	if err != nil {
-		return
-	}
-	var di dirInfos = dirInfos{}
-	if err = json.Unmarshal(b, &di); err != nil {
-		return
-	}
-	di.downXS()
-	for i := range di.DirInfos {
-		<-ch
-		i++
-	}
-	return
-}
-func testGetDir() (err error) {
-	var b []byte
-	b, err = ioutil.ReadFile("dir.html")
-	if err != nil {
-		return
-	}
-
-	di, err := getDir(b)
-	if err != nil {
-		return
-	}
-
-	err = di.saveJsonTxt("dirJson.txt")
-	if err != nil {
-		return
-	}
+	str = reg.ReplaceAllString(str, "")
+	fmt.Println(str)
 	return
 }
