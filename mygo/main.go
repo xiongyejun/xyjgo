@@ -7,7 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+
+	epub "github.com/bmaupin/go-epub"
 )
+
+var strPathSeparator = string(os.PathSeparator)
 
 func main() {
 	if len(os.Args) == 1 {
@@ -104,6 +108,9 @@ type EpubSet struct {
 
 	SplitInfos  []SplitInfo
 	ReplaceExpr []string // 有些广告需要替换的正则表达式
+
+	ep  *epub.Epub
+	nav string // 多层次的情况要自己创建目录，改写nav.xhtml
 }
 
 // 创建epub格式的文件
@@ -120,9 +127,8 @@ func fEpubSet() {
 		return
 	}
 
-	tmp := string(os.PathSeparator)
-	if !strings.HasSuffix(es.SrcFolderPath, tmp) {
-		es.SrcFolderPath += tmp
+	if !strings.HasSuffix(es.SrcFolderPath, strPathSeparator) {
+		es.SrcFolderPath += strPathSeparator
 	}
 	fmt.Printf("%#v\n", es)
 

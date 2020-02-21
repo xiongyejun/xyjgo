@@ -58,3 +58,19 @@ func gbkToUtf8(b []byte) ([]byte, error) {
 	}
 	return d, nil
 }
+
+func scanDir(strDir string) (retDirs, retFiles []string, err error) {
+	var entrys []os.FileInfo
+	if entrys, err = ioutil.ReadDir(strDir); err != nil {
+		return
+	}
+	for i := range entrys {
+		if entrys[i].IsDir() {
+			retDirs = append(retDirs, entrys[i].Name())
+		} else {
+			retFiles = append(retFiles, entrys[i].Name())
+		}
+	}
+
+	return
+}

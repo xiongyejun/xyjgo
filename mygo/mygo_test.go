@@ -8,7 +8,10 @@ import (
 
 func Test_func(t *testing.T) {
 	var err error
-	err = testRegexp()
+	var retDirs, retFiles []string
+	retDirs, retFiles, err = scanDir("C:\\Users\\Administrator\\Desktop\\srcHtml\\srcHtml\\测试1")
+	t.Log(retDirs)
+	t.Log(retFiles)
 
 	if err != nil {
 		t.Error(err)
