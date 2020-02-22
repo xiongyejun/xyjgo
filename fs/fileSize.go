@@ -125,7 +125,7 @@ func (me *FileInfo) Print10() {
 			me.Subs[i].Print10()
 			iDir++
 			if iDir == 10 {
-				return
+				os.Exit(0)
 			}
 		}
 	}
