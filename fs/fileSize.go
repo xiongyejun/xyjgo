@@ -26,11 +26,10 @@ type FileInfo struct {
 
 var strPathSeparator = string(os.PathSeparator)
 var fi *FileInfo = new(FileInfo)
-var bDir bool = false
 
 func main() {
 	if len(os.Args) == 1 {
-		fmt.Println("fileSize <dir> [d-打印文件夹;10-打印前10个文件夹（每个文件夹前10）]")
+		fmt.Println("fileSize <dir> [d-打印第1层文件夹;10-打印前10个文件夹（每个文件夹前10）]")
 		return
 	}
 
@@ -56,8 +55,7 @@ func main() {
 		case "10":
 			fi.Print10()
 		case "d":
-			bDir = true
-			fi.Print()
+			fi.PrintDir1()
 		default:
 			fmt.Println("未知的第3参数。")
 		}
@@ -131,15 +129,22 @@ func (me *FileInfo) Print10() {
 	}
 
 }
+func (me *FileInfo) PrintDir1() {
+	me.printDir()
+
+	for i := range me.Subs {
+		if me.Subs[i].IsDir {
+			me.Subs[i].printDir()
+		}
+	}
+}
 
 func (me *FileInfo) Print() {
 	me.printDir()
 
-	if !bDir {
-		for i := range me.Subs {
-			if !me.Subs[i].IsDir {
-				me.Subs[i].printFile()
-			}
+	for i := range me.Subs {
+		if !me.Subs[i].IsDir {
+			me.Subs[i].printFile()
 		}
 	}
 
