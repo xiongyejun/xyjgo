@@ -52,7 +52,7 @@ func fDirSet() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("%#v\n", ds)
+	fmt.Printf("%s\n", b)
 
 	var r dirInfos
 	if r, err = ds.getDirInfo(); err != nil {
@@ -84,7 +84,7 @@ func fDownSet() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("%#v\n", ds)
+	fmt.Printf("%s\n", b)
 
 	os.RemoveAll("srcHtml")
 	os.Mkdir("srcHtml", 0666)
@@ -130,7 +130,7 @@ func fEpubSet() {
 	if !strings.HasSuffix(es.SrcFolderPath, strPathSeparator) {
 		es.SrcFolderPath += strPathSeparator
 	}
-	fmt.Printf("%#v\n", es)
+	fmt.Printf("%s\n", b)
 
 	if err = es.create(); err != nil {
 		fmt.Println(err)
@@ -169,7 +169,7 @@ func xsTemplateSet() {
 		CoverPicFile:  "封面图片的路径",
 		SrcFolderPath: "每一个章节的原始网页保存路径",
 
-		DivID: "按DivID提取内容，如果为空，则应该按照SplitSep符号来分割",
+		DivID: `按DivID提取内容，如果为空，则应该按照SplitSep符号来分割 <div id=\"book_text\">`,
 
 		SplitInfos: []SplitInfo{
 			SplitInfo{
