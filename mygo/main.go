@@ -98,6 +98,11 @@ type SplitInfo struct {
 	Sep      string
 	RetIndex int // 分割后需要获取数组的下标
 }
+type ReplaceInfo struct {
+	Expr string
+	New  string
+}
+
 type EpubSet struct {
 	Name          string // 创建的文件名称
 	Author        string // 书的作者
@@ -107,7 +112,7 @@ type EpubSet struct {
 	DivID string // 按DivID提取内容，如果为空，则应该按照SplitSep符号来分割
 
 	SplitInfos  []SplitInfo
-	ReplaceExpr []string // 有些广告需要替换的正则表达式
+	ReplaceExpr []ReplaceInfo // 有些广告需要替换的正则表达式
 
 	ep  *epub.Epub
 	nav string // 多层次的情况要自己创建目录，改写nav.xhtml
@@ -182,9 +187,11 @@ func xsTemplateSet() {
 			},
 		},
 
-		ReplaceExpr: []string{
-			"有些广告需要替换的正则表达式1",
-			"有些广告需要替换的正则表达式2",
+		ReplaceExpr: []ReplaceInfo{
+			{
+				Expr: "有些广告需要替换的正则表达式1",
+				New:  "替换为，一般为空",
+			},
 		},
 	}
 

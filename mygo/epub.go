@@ -89,10 +89,10 @@ func (me *EpubSet) addSection(dirPath, fileName string, iLevel int) (nav string,
 
 	for j := range me.ReplaceExpr {
 		var reg *regexp.Regexp
-		if reg, err = regexp.Compile(me.ReplaceExpr[j]); err != nil {
+		if reg, err = regexp.Compile(me.ReplaceExpr[j].Expr); err != nil {
 			return
 		}
-		str = reg.ReplaceAllString(str, "")
+		str = reg.ReplaceAllString(str, me.ReplaceExpr[j].New)
 	}
 
 	// 为了创建epub格式
