@@ -27,6 +27,12 @@ var (
 	findWindowEx             uintptr
 	messageBox               uintptr
 	getActiveWindow          uintptr
+	getWindowLong            uintptr
+	setWindowLong            uintptr
+	getWindowLongPtr         uintptr
+	setWindowLongPtr         uintptr
+	updateWindow             uintptr
+	showWindow               uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -56,6 +62,12 @@ func init() {
 	getWindowThreadProcessId = win.MustGetProcAddress(lib, "GetWindowThreadProcessId")
 	messageBox = win.MustGetProcAddress(lib, "MessageBoxW")
 	getActiveWindow = win.MustGetProcAddress(lib, "GetActiveWindow")
+	getWindowLong = win.MustGetProcAddress(lib, "GetWindowLongW")
+	setWindowLong = win.MustGetProcAddress(lib, "SetWindowLongW")
+	//	getWindowLongPtr = win.MustGetProcAddress(lib, "GetWindowLongPtrW")
+	//	setWindowLongPtr = win.MustGetProcAddress(lib, "SetWindowLongPtrW")
+	updateWindow = win.MustGetProcAddress(lib, "UpdateWindow")
+	showWindow = win.MustGetProcAddress(lib, "ShowWindow")
 }
 
 // INPUT Type
@@ -583,6 +595,121 @@ func MessageBox(hWnd uint32, lpText, lpCaption string, uType uint32) int32 {
 	return int32(ret)
 }
 
+// GetWindowLong and GetWindowLongPtr constants
+const (
+	GWL_EXSTYLE     = -20
+	GWL_STYLE       = -16
+	GWL_WNDPROC     = -4
+	GWLP_WNDPROC    = -4
+	GWL_HINSTANCE   = -6
+	GWLP_HINSTANCE  = -6
+	GWL_HWNDPARENT  = -8
+	GWLP_HWNDPARENT = -8
+	GWL_ID          = -12
+	GWLP_ID         = -12
+	GWL_USERDATA    = -21
+	GWLP_USERDATA   = -21
+)
+
+func GetWindowLong(hWnd uint32, index int32) int32 {
+	ret, _, _ := syscall.Syscall(getWindowLong, 2,
+		uintptr(hWnd),
+		uintptr(index),
+		0)
+
+	return int32(ret)
+}
+
+// Extended window style constants
+const (
+	WS_EX_DLGMODALFRAME    = 0X00000001
+	WS_EX_NOPARENTNOTIFY   = 0X00000004
+	WS_EX_TOPMOST          = 0X00000008
+	WS_EX_ACCEPTFILES      = 0X00000010
+	WS_EX_TRANSPARENT      = 0X00000020
+	WS_EX_MDICHILD         = 0X00000040
+	WS_EX_TOOLWINDOW       = 0X00000080
+	WS_EX_WINDOWEDGE       = 0X00000100
+	WS_EX_CLIENTEDGE       = 0X00000200
+	WS_EX_CONTEXTHELP      = 0X00000400
+	WS_EX_RIGHT            = 0X00001000
+	WS_EX_LEFT             = 0X00000000
+	WS_EX_RTLREADING       = 0X00002000
+	WS_EX_LTRREADING       = 0X00000000
+	WS_EX_LEFTSCROLLBAR    = 0X00004000
+	WS_EX_RIGHTSCROLLBAR   = 0X00000000
+	WS_EX_CONTROLPARENT    = 0X00010000
+	WS_EX_STATICEDGE       = 0X00020000
+	WS_EX_APPWINDOW        = 0X00040000
+	WS_EX_OVERLAPPEDWINDOW = 0X00000100 | 0X00000200
+	WS_EX_PALETTEWINDOW    = 0X00000100 | 0X00000080 | 0X00000008
+	WS_EX_LAYERED          = 0X00080000
+	WS_EX_NOINHERITLAYOUT  = 0X00100000
+	WS_EX_LAYOUTRTL        = 0X00400000
+	WS_EX_COMPOSITED       = 0X02000000
+	WS_EX_NOACTIVATE       = 0X08000000
+)
+
+func SetWindowLong(hWnd uint32, index, value int32) int32 {
+	ret, _, _ := syscall.Syscall(setWindowLong, 3,
+		uintptr(hWnd),
+		uintptr(index),
+		uintptr(value))
+
+	return int32(ret)
+}
+
+func SetWindowLongPtr(hWnd uint32, index int, value uintptr) uintptr {
+	ret, _, _ := syscall.Syscall(setWindowLongPtr, 3,
+		uintptr(hWnd),
+		uintptr(index),
+		value)
+
+	return ret
+}
+func GetWindowLongPtr(hWnd uint32, index int32) uintptr {
+	ret, _, _ := syscall.Syscall(getWindowLongPtr, 2,
+		uintptr(hWnd),
+		uintptr(index),
+		0)
+
+	return ret
+}
+func UpdateWindow(hwnd uint32) bool {
+	ret, _, _ := syscall.Syscall(updateWindow, 1,
+		uintptr(hwnd),
+		0,
+		0)
+
+	return ret != 0
+}
+
+// ShowWindow constants
+const (
+	SW_HIDE            = 0
+	SW_NORMAL          = 1
+	SW_SHOWNORMAL      = 1
+	SW_SHOWMINIMIZED   = 2
+	SW_MAXIMIZE        = 3
+	SW_SHOWMAXIMIZED   = 3
+	SW_SHOWNOACTIVATE  = 4
+	SW_SHOW            = 5
+	SW_MINIMIZE        = 6
+	SW_SHOWMINNOACTIVE = 7
+	SW_SHOWNA          = 8
+	SW_RESTORE         = 9
+	SW_SHOWDEFAULT     = 10
+	SW_FORCEMINIMIZE   = 11
+)
+
+func ShowWindow(hWnd uint32, nCmdShow int32) bool {
+	ret, _, _ := syscall.Syscall(showWindow, 2,
+		uintptr(hWnd),
+		uintptr(nCmdShow),
+		0)
+
+	return ret != 0
+}
 func Free() {
 	syscall.FreeLibrary(syscall.Handle(lib))
 }
