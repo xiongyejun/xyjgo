@@ -75,6 +75,7 @@ func (me *EpubSet) addSection(fi *FileInfo, iLevel int) (err error) {
 				// 为了创建epub格式
 				str = `<h2>` + fi.Subs[i].Name[6:] + "</h2>" + str
 				str += `<br /><a href="` + fi.Name + `.xhtml">` + fi.Name + `</a>` // 跳转到目录
+				str += `<br /><a href="目录.xhtml">目录</a>`                           // 跳转到目录
 
 				if _, err = me.ep.AddSection(str, fi.Subs[i].Name[6:], fi.Subs[i].Name+".xhtml", ""); err != nil {
 					panic(err)
