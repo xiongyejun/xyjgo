@@ -35,6 +35,15 @@ func NewByWindow(window string) (ret *OpMem, err error) {
 	return New(processID)
 }
 
+func NewByProcessName(processName string) (ret *OpMem, err error) {
+	var pid uint32
+	if pid, err = kernel32.GetPIDByProcessName(processName); err != nil {
+		return
+	}
+
+	return New(pid)
+}
+
 func (me *OpMem) Scan() (ret []*kernel32.MEMORY_BASIC_INFORMATION, err error) {
 	/*
 		--------4G------ 0xFFFFFFFF
@@ -55,7 +64,8 @@ func (me *OpMem) Scan() (ret []*kernel32.MEMORY_BASIC_INFORMATION, err error) {
 			}
 			baseAddress = uint32(lpBuffer.RegionSize + lpBuffer.BaseAddress)
 		} else {
-			baseAddress += 1
+			//			println("VirtualQueryEx返回不等于28.")
+			baseAddress += 4
 		}
 	}
 	return

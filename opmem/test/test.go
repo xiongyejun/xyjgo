@@ -1,13 +1,15 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/xiongyejun/xyjgo/opmem"
 )
 
 func main() {
-	ret, err := opmem.NewByWindow(`C:\Users\Administrator\Documents\08-go\src\github.com\xiongyejun\xyjgo\opmem\exe32\exe32.exe`)
+	ret, err := opmem.NewByProcessName(`exe32.exe`)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -25,7 +27,12 @@ func main() {
 		if err != nil {
 			fmt.Printf("%x, %s\n", retv[i].BaseAddress, err.Error())
 		} else {
-			fmt.Printf("%x, size=%x, value= % x\n", retv[i].BaseAddress, retv[i].RegionSize, b[:10])
+			for j := 0; j < len(b); j += 4 {
+				if bytes.Compare(b[j:j+4], []byte{0, 0, 0, 0}) != 0 {
+					fmt.Printf("%x = %d\n", retv[i].BaseAddress+int32(j), binary.LittleEndian.Uint32(b[j:j+4]))
+				}
+
+			}
 		}
 	}
 

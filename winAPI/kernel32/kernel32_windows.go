@@ -1,6 +1,8 @@
 package kernel32
 
 import (
+	"bytes"
+	"errors"
 	"syscall"
 	"unsafe"
 
@@ -8,20 +10,23 @@ import (
 )
 
 var (
-	lib                uintptr
-	getShortPathName   uintptr
-	globalAlloc        uintptr
-	globalFree         uintptr
-	globalLock         uintptr
-	globalUnlock       uintptr
-	openProcess        uintptr
-	virtualAllocEx     uintptr
-	virtualFreeEx      uintptr
-	virtualQueryEx     uintptr
-	writeProcessMemory uintptr
-	readProcessMemory  uintptr
-	closeHandle        uintptr
-	getLastError       uintptr
+	lib                      uintptr
+	getShortPathName         uintptr
+	globalAlloc              uintptr
+	globalFree               uintptr
+	globalLock               uintptr
+	globalUnlock             uintptr
+	openProcess              uintptr
+	virtualAllocEx           uintptr
+	virtualFreeEx            uintptr
+	virtualQueryEx           uintptr
+	writeProcessMemory       uintptr
+	readProcessMemory        uintptr
+	closeHandle              uintptr
+	createToolhelp32Snapshot uintptr
+	process32First           uintptr
+	process32Next            uintptr
+	getLastError             uintptr
 )
 
 // GlobalAlloc flags
@@ -50,6 +55,9 @@ func init() {
 	writeProcessMemory = win.MustGetProcAddress(lib, "WriteProcessMemory")
 	readProcessMemory = win.MustGetProcAddress(lib, "ReadProcessMemory")
 	closeHandle = win.MustGetProcAddress(lib, "CloseHandle")
+	createToolhelp32Snapshot = win.MustGetProcAddress(lib, "CreateToolhelp32Snapshot")
+	process32Next = win.MustGetProcAddress(lib, "Process32Next")
+	process32First = win.MustGetProcAddress(lib, "Process32First")
 	getLastError = win.MustGetProcAddress(lib, "GetLastError")
 }
 
@@ -127,6 +135,57 @@ func CloseHandle(hObject uint32) bool {
 
 	return ret != 0
 }
+
+const (
+	TH32CS_INHERIT      = 0x80000000                                                                         // 声明快照句柄是可继承的。
+	TH32CS_SNAPHEAPLIST = 0x00000001                                                                         // 在快照中包含在th32ProcessID中指定的进程的所有的堆。
+	TH32CS_SNAPMODULE   = 0x00000008                                                                         // 在快照中包含在th32ProcessID中指定的进程的所有的模块。
+	TH32CS_SNAPPROCESS  = 0x00000002                                                                         // 在快照中包含系统中所有的进程。
+	TH32CS_SNAPTHREAD   = 0x00000004                                                                         // 在快照中包含系统中所有的线程。
+	H32CS_SNAPALL       = (TH32CS_SNAPHEAPLIST | TH32CS_SNAPPROCESS | TH32CS_SNAPTHREAD | TH32CS_SNAPMODULE) // 在快照中包含系统中所有的进程和线程。
+
+	INVALID_HANDLE_VALUE = -1
+)
+
+func CreateToolhelp32Snapshot(dwFlags, th32ProcessID uint32) uint32 {
+	ret, _, _ := syscall.Syscall(createToolhelp32Snapshot, 2,
+		uintptr(dwFlags),
+		uintptr(th32ProcessID),
+		0)
+
+	return uint32(ret)
+}
+
+type PROCESSENTRY32 struct {
+	Size            uint32 // 结构大小；
+	Usage           uint32 // 此进程的引用计数；
+	ProcessID       uint32 // 进程ID;
+	DefaultHeapID   uint32 // 进程默认堆ID；
+	ModuleID        uint32 // 进程模块ID；
+	Threads         uint32 // 此进程开启的线程计数；
+	ParentProcessID uint32 // 父进程ID；
+	PriClassBase    uint32 // 线程优先权；
+	Flags           uint32 // 保留；
+	ExeFile         [1024]byte
+	//     szExeFile[MAX_PATH] uint32 // 进程全名；
+}
+
+func Process32First(hSnapshot uint32, lppe uintptr) uint32 {
+	ret, _, _ := syscall.Syscall(process32First, 2,
+		uintptr(hSnapshot),
+		lppe,
+		0)
+
+	return uint32(ret)
+}
+func Process32Next(hSnapshot uint32, lppe uintptr) uint32 {
+	ret, _, _ := syscall.Syscall(process32Next, 2,
+		uintptr(hSnapshot),
+		lppe,
+		0)
+
+	return uint32(ret)
+}
 func VirtualAllocEx(hProcess uint32, lpAddress uintptr, dwSize uintptr, flAllocationType, flProtect uint32) uintptr {
 	ret, _, _ := syscall.Syscall6(virtualAllocEx, 5,
 		uintptr(hProcess),
@@ -194,25 +253,25 @@ func VirtualQueryEx(hProcess uint32, lpAddress, lpBuffer uintptr, dwLength int32
 	return int32(ret)
 }
 
-func WriteProcessMemory(hProcess uint32, lpBaseAddress uintptr, lpBuffer uintptr, nSize, lpNumberOfBytesWrittenu int32) int32 {
+func WriteProcessMemory(hProcess uint32, lpBaseAddress uintptr, lpBuffer uintptr, nSize, lpNumberOfBytesWritten int32) int32 {
 	ret, _, _ := syscall.Syscall6(writeProcessMemory, 5,
 		uintptr(hProcess),
 		lpBaseAddress,
 		lpBuffer,
 		uintptr(nSize),
-		uintptr(lpNumberOfBytesWrittenu),
+		uintptr(lpNumberOfBytesWritten),
 		0)
 
 	return int32(ret)
 }
 
-func ReadProcessMemory(hProcess uint32, lpBaseAddress uintptr, lpBuffer uintptr, nSize, lpNumberOfBytesWrittenu int32) int32 {
+func ReadProcessMemory(hProcess uint32, lpBaseAddress uintptr, lpBuffer uintptr, nSize, lpNumberOfBytesRead int32) int32 {
 	ret, _, _ := syscall.Syscall6(readProcessMemory, 5,
 		uintptr(hProcess),
 		lpBaseAddress,
 		lpBuffer,
 		uintptr(nSize),
-		uintptr(lpNumberOfBytesWrittenu),
+		uintptr(lpNumberOfBytesRead),
 		0)
 
 	return int32(ret)
@@ -225,6 +284,30 @@ func GetLastError() uint32 {
 		0)
 
 	return uint32(ret)
+}
+
+func GetPIDByProcessName(processName string) (ret uint32, err error) {
+	hProcessSnap := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+	if hProcessSnap == 0 {
+		err = errors.New("CreateToolhelp32Snapshot出错。 ")
+		return
+	}
+	defer CloseHandle(hProcessSnap)
+
+	pentry := PROCESSENTRY32{}
+	pentry.Size = 1024 + 9*4
+	b := Process32First(hProcessSnap, uintptr(unsafe.Pointer(&pentry.Size)))
+	for b == 1 {
+		index := bytes.Index(pentry.ExeFile[:], []byte{0})
+		str := string(pentry.ExeFile[:index])
+		if str == processName {
+			ret = pentry.ProcessID
+			return
+		}
+		b = Process32Next(hProcessSnap, uintptr(unsafe.Pointer(&pentry.Size)))
+	}
+
+	return
 }
 
 func Free() {
