@@ -7,14 +7,20 @@ import (
 )
 
 func Test_func(t *testing.T) {
+	var fi *FileInfo
 	var err error
-	var retDirs, retFiles []string
-	retDirs, retFiles, err = scanDir("C:\\Users\\Administrator\\Desktop\\srcHtml\\srcHtml\\测试1")
-	t.Log(retDirs)
-	t.Log(retFiles)
-
-	if err != nil {
+	if fi, err = scanDir(`C:\Users\Administrator\Desktop\srcHtml\bcgm本草纲目\`, "srcHtml", 0); err != nil {
 		t.Error(err)
+		return
+	}
+
+	t.Log(fi.HasFile, fi.IsDir)
+	for i := range fi.Subs {
+		t.Logf("%d %s\n", i, fi.Subs[i].Name)
+		t.Log(fi.Subs[i].HasFile)
+		//		for j := range fi.Subs[i].Subs {
+		//			t.Logf("%d %s\n", j, fi.Subs[i].Subs[j].Name)
+		//		}
 	}
 }
 

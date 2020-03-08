@@ -59,16 +59,50 @@ func gbkToUtf8(b []byte) ([]byte, error) {
 	return d, nil
 }
 
-func scanDir(strDir string) (retDirs, retFiles []string, err error) {
+type FileInfo struct {
+	IsDir      bool
+	Size       int64
+	Path, Name string
+	Level      int
+	HasFile    bool
+
+	Subs []*FileInfo
+}
+
+func scanDir(path, name string, iLevel int) (ret *FileInfo, err error) {
 	var entrys []os.FileInfo
-	if entrys, err = ioutil.ReadDir(strDir); err != nil {
+	if entrys, err = ioutil.ReadDir(path + name); err != nil {
 		return
 	}
+
+	ret = &FileInfo{
+		IsDir:   true,
+		Size:    0,
+		Path:    path,
+		Name:    name,
+		Level:   iLevel,
+		HasFile: false,
+	}
+
 	for i := range entrys {
 		if entrys[i].IsDir() {
-			retDirs = append(retDirs, entrys[i].Name())
+			var tmp *FileInfo
+			if tmp, err = scanDir(path+name+strPathSeparator, entrys[i].Name(), iLevel+1); err != nil {
+				return
+			}
+			ret.Subs = append(ret.Subs, tmp)
+			ret.Size += tmp.Size
 		} else {
-			retFiles = append(retFiles, entrys[i].Name())
+			ret.Size += entrys[i].Size()
+			ret.HasFile = true
+			ret.Subs = append(ret.Subs, &FileInfo{
+				IsDir:   false,
+				Size:    entrys[i].Size(),
+				Path:    path + name + strPathSeparator,
+				Name:    entrys[i].Name(),
+				Level:   iLevel + 1,
+				HasFile: false,
+			})
 		}
 	}
 
