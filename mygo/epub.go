@@ -108,7 +108,7 @@ func (me *EpubSet) addSubDir(fi *FileInfo) (err error) {
 		bodys[i] = `  <li><a href="` + fi.Subs[i].Name + `.xhtml">` + filename + `</a></li>`
 	}
 
-	if _, err = me.ep.AddSection("<ol>\n"+strings.Join(bodys, "\n")+"\n</ol>"+
+	if _, err = me.ep.AddSection(fi.Name+"<ol>\n"+strings.Join(bodys, "\n")+"\n</ol>"+
 		`<br /><a href="目录.xhtml">目录</a>`,
 		fi.Name, fi.Name+".xhtml", ""); err != nil {
 		return
