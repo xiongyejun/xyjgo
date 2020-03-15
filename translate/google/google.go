@@ -36,7 +36,7 @@ func (me *google) Translate(value string) (ret string, err error) {
 	if b, err = translate.HttpGet(me.URL + strTL + `&ie=UTF-8&prev=_m&q=` + value); err != nil {
 		return
 	}
-	ioutil.WriteFile("1.txt", b, 0666)
+
 	b = bytes.Split(b, []byte(`<div dir="ltr" class="t0">`))[1] // <div dir="ltr" class="t0">你好吗</div>
 	b = bytes.Split(b, []byte(`</div>`))[0]
 	if b, err = gbkToUtf8(b); err != nil {
