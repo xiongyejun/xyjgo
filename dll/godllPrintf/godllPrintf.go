@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"unsafe"
 
+	"github.com/xiongyejun/xyjgo/ucs2"
+
 	"github.com/xiongyejun/xyjgo/vbatd"
 )
 
@@ -16,7 +18,7 @@ func main() {
 }
 
 //export Sprintf
-func Sprintf(pformat, pParamArray, nCount int) (ptr unsafe.Pointer, lenth int) {
+func Sprintf(pformat, pParamArray, nCount int32) (ptr unsafe.Pointer, lenth int) {
 	var err error
 	var str string
 
@@ -33,9 +35,11 @@ func Sprintf(pformat, pParamArray, nCount int) (ptr unsafe.Pointer, lenth int) {
 	}
 
 	var its []interface{}
-	if its, err = vbatd.Variants2interfaces(uintptr(pParamArray), nCount); err != nil {
-		str = err.Error()
-		return str2ptr(str)
+	if nCount > 0 {
+		if its, err = vbatd.Variants2interfaces(uintptr(pParamArray), int(nCount)); err != nil {
+			str = err.Error()
+			return str2ptr(str)
+		}
 	}
 
 	str = fmt.Sprintf(strformat, its...)
@@ -55,6 +59,8 @@ func Free(p unsafe.Pointer) {
 
 func str2ptr(str string) (ptr unsafe.Pointer, lenth int) {
 	b := []byte(str)
+	b, _ = ucs2.FromUTF8(b)
+
 	lenth = len(b)
 	ptr = C.malloc(C.uint(lenth))
 	C.memcpy(ptr, unsafe.Pointer(&b[0]), C.uint(lenth))

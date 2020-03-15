@@ -89,115 +89,54 @@ func Variants2interfaces(pParamArray uintptr, nCount int) (ret []interface{}, er
 func Variant2interface(pVBAVariant uintptr) (ret interface{}, err error) {
 	vv := (*(*VBAVariant)(unsafe.Pointer(pVBAVariant)))
 
-	switch vv.Flags[1] {
-	case 0x0:
-		return vv.getValue()
-
-	// 通过ParamArray传递参数，Variant里保存的是数据地址
-	case IS_VAR_ADDR:
-		return vv.getValueAddr()
-
-	// 存储的是数组
-	case IS_ARR_ADDR:
-		var pv int32 = int32(vv.Data[0]) | (int32(vv.Data[1]) << 8) | (int32(vv.Data[2]) << 16) | (int32(vv.Data[3]) << 24)
-		return vv.getArr(pv)
-
-	// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
-	case IS_ARR_ADDR_ADDR:
-		var pv int32 = int32(vv.Data[0]) | (int32(vv.Data[1]) << 8) | (int32(vv.Data[2]) << 16) | (int32(vv.Data[3]) << 24)
-		if vv.Flags[0] != VString {
-			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
-		}
-		return vv.getArr(pv)
-
-	default:
-		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
-	}
-	return
-}
-
-func (me *VBAVariant) getValue() (ret interface{}, err error) {
-	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
-
-	switch me.Flags[0] {
+	switch vv.Flags[0] {
 	case VByte:
-		ret = me.Data[0]
+		return vv.getByte()
 
 	case VInteger:
-		ret = int16(me.Data[0]) | (int16(me.Data[1]) << 8)
+		return vv.getInteger()
 
 	case VLong:
-		ret = pv
+		return vv.getLong()
 
 	case VString:
-		vs := VBAString{
-			lenth: *((*int32)(unsafe.Pointer(uintptr(pv - 4)))),
-			ptr:   uintptr(pv),
-		}
-		return vs.getGoString()
+		return vv.getString()
 
 	case VSingle:
-		ret = *((*float32)(unsafe.Pointer(&me.Data)))
+		return vv.getSingle()
+
 	case VDouble:
-		ret = *((*float64)(unsafe.Pointer(&me.Data)))
+		return vv.getDouble()
+
 	case VBoolean:
-		ret = (me.Data[0] != 0)
+		return vv.getBoolean()
+
 	default:
 		err = errors.New("不能处理的VBA Variant Type.")
 	}
 	return
 }
 
-func (me *VBAVariant) getValueAddr() (ret interface{}, err error) {
+func (me *VBAVariant) getByte() (ret interface{}, err error) {
 	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
 
-	switch me.Flags[0] {
-	case VByte:
+	switch me.Flags[1] {
+	case 0x0:
+		ret = me.Data[0]
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
 		ret = *((*byte)(unsafe.Pointer(uintptr(pv))))
-
-	case VInteger:
-		ret = *((*int16)(unsafe.Pointer(uintptr(pv))))
-
-	case VLong:
-		ret = *((*int32)(unsafe.Pointer(uintptr(pv))))
-
-	case VString:
-		pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
-
-		vs := VBAString{
-			lenth: *((*int32)(unsafe.Pointer(uintptr(pv - 4)))),
-			ptr:   uintptr(pv),
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
 		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
 
-		b := make([]byte, vs.lenth)
-		for i := range b {
-			b[i] = (*(*byte)(unsafe.Pointer(vs.ptr + uintptr(i))))
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
 		}
-
-		if b, err = ucs2.ToUTF8(b); err != nil {
-			return
-		}
-		ret = string(b)
-	case VBoolean:
-		tmp := *((*int16)(unsafe.Pointer(uintptr(pv))))
-		ret = (tmp != 0)
-
-	default:
-		err = errors.New("不能处理的VBA Variant Type.")
-	}
-
-	return
-}
-
-func (me *VBAVariant) getArr(pv int32) (ret interface{}, err error) {
-	safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
-
-	if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
-		err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
-	}
-
-	switch me.Flags[0] {
-	case VByte:
 		if safearr.cDims == 1 {
 			b := make([]byte, safearr.rgsabound[0].cElements)
 			for i := range b {
@@ -206,7 +145,33 @@ func (me *VBAVariant) getArr(pv int32) (ret interface{}, err error) {
 			ret = b
 		}
 
-	case VInteger:
+	default:
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
+	}
+
+	return
+}
+
+func (me *VBAVariant) getInteger() (ret interface{}, err error) {
+	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
+
+	switch me.Flags[1] {
+	case 0x0:
+		ret = int16(me.Data[0]) | (int16(me.Data[1]) << 8)
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
+		ret = *((*int16)(unsafe.Pointer(uintptr(pv))))
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
+
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
+		}
 		if safearr.cDims == 1 {
 			b := make([]int16, safearr.rgsabound[0].cElements)
 			for i := range b {
@@ -215,7 +180,68 @@ func (me *VBAVariant) getArr(pv int32) (ret interface{}, err error) {
 			ret = b
 		}
 
-	case VLong:
+	default:
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
+	}
+
+	return
+}
+
+func (me *VBAVariant) getBoolean() (ret interface{}, err error) {
+	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
+
+	switch me.Flags[1] {
+	case 0x0:
+		ret = me.Data[0] != 0
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
+		ret = (*((*int16)(unsafe.Pointer(uintptr(pv))))) != 0
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
+
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
+		}
+		if safearr.cDims == 1 {
+			b := make([]bool, safearr.rgsabound[0].cElements)
+			for i := range b {
+				b[i] = (*(*int16)(unsafe.Pointer(uintptr(safearr.pvDataas + int32(i*2))))) != 0
+			}
+			ret = b
+		}
+
+	default:
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
+	}
+
+	return
+}
+
+func (me *VBAVariant) getLong() (ret interface{}, err error) {
+	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
+
+	switch me.Flags[1] {
+	case 0x0:
+		ret = pv
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
+		ret = *((*int32)(unsafe.Pointer(uintptr(pv))))
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
+
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
+		}
 		if safearr.cDims == 1 {
 			b := make([]int32, safearr.rgsabound[0].cElements)
 			for i := range b {
@@ -223,11 +249,126 @@ func (me *VBAVariant) getArr(pv int32) (ret interface{}, err error) {
 			}
 			ret = b
 		}
-	case VString:
+
+	default:
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
+	}
+
+	return
+}
+
+func (me *VBAVariant) getSingle() (ret interface{}, err error) {
+	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
+
+	switch me.Flags[1] {
+	case 0x0:
+		ret = *((*float32)(unsafe.Pointer(&me.Data)))
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
+		ret = *((*float32)(unsafe.Pointer(uintptr(pv))))
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
+
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
+		}
+		if safearr.cDims == 1 {
+			b := make([]float32, safearr.rgsabound[0].cElements)
+			for i := range b {
+				b[i] = (*(*float32)(unsafe.Pointer(uintptr(safearr.pvDataas + int32(i*4)))))
+			}
+			ret = b
+		}
+
+	default:
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
+	}
+
+	return
+}
+
+func (me *VBAVariant) getDouble() (ret interface{}, err error) {
+	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
+
+	switch me.Flags[1] {
+	case 0x0:
+		ret = *((*float64)(unsafe.Pointer(&me.Data)))
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
+		ret = *((*float64)(unsafe.Pointer(uintptr(pv))))
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
+
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
+		}
+		if safearr.cDims == 1 {
+			b := make([]float64, safearr.rgsabound[0].cElements)
+			for i := range b {
+				b[i] = (*(*float64)(unsafe.Pointer(uintptr(safearr.pvDataas + int32(i*8)))))
+			}
+			ret = b
+		}
+
+	default:
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
+	}
+
+	return
+}
+
+func (me *VBAVariant) getString() (ret interface{}, err error) {
+	var pv int32 = int32(me.Data[0]) | (int32(me.Data[1]) << 8) | (int32(me.Data[2]) << 16) | (int32(me.Data[3]) << 24)
+
+	switch me.Flags[1] {
+	case 0x0:
+		vs := VBAString{
+			lenth: *((*int32)(unsafe.Pointer(uintptr(pv - 4)))),
+			ptr:   uintptr(pv),
+		}
+		return vs.getGoString()
+	// 通过ParamArray传递参数，Variant里保存的是数据地址
+	case IS_VAR_ADDR:
+		pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+
+		vs := VBAString{
+			lenth: *((*int32)(unsafe.Pointer(uintptr(pv - 4)))),
+			ptr:   uintptr(pv),
+		}
+		return vs.getGoString()
+
+	// 存储的是数组
+	case IS_ARR_ADDR, IS_ARR_ADDR_ADDR:
+		// 通过ParamArray传递的数组，Variant里保存的地址指向数组的地址
+		if me.Flags[1] == IS_ARR_ADDR_ADDR {
+			pv = *((*int32)(unsafe.Pointer(uintptr(pv))))
+		}
+		safearr := *((*SafeArray)(unsafe.Pointer(uintptr(pv))))
+
+		if safearr.cbElements != sizeVBADataType[me.Flags[0]] {
+			err = errors.New("SafeArray.cbElements元素的字节大小与VBA Variant Type不一致.")
+			return
+		}
+
 		if safearr.cDims == 1 {
 			b := make([]string, safearr.rgsabound[0].cElements)
 			for i := range b {
 				pv = *((*int32)(unsafe.Pointer(uintptr(safearr.pvDataas + int32(i*4)))))
+
+				if pv == 0 {
+					b[i] = ""
+					continue
+				}
 
 				vs := VBAString{
 					lenth: *((*int32)(unsafe.Pointer(uintptr(pv - 4)))),
@@ -237,13 +378,12 @@ func (me *VBAVariant) getArr(pv int32) (ret interface{}, err error) {
 				if b[i], err = vs.getGoString(); err != nil {
 					return
 				}
-
 			}
 			ret = b
 		}
 
 	default:
-		err = errors.New("不能处理的VBA Variant Type.")
+		err = errors.New("不能处理的VBA Variant 第2个byte Type.")
 	}
 
 	return
