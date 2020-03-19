@@ -1,20 +1,25 @@
+// dll for vba
 package main
 
-/*
-#include <stdlib.h>
-#include <string.h>
-*/
 import "C"
 import (
 	"fmt"
 	"unsafe"
 
-	"github.com/xiongyejun/xyjgo/ucs2"
-
 	"github.com/xiongyejun/xyjgo/vbatd"
 )
 
 func main() {
+}
+
+//export RetVarPtr
+func RetVarPtr() (VarPtr int32) {
+	var str = "测试直接返回VBA String的VarPtr"
+
+	VarPtr = int32(uintptr(str2VarPtr(str)))
+
+	return
+
 }
 
 //export Sprintf
@@ -50,20 +55,4 @@ func Sprintf(pformat, pParamArray, nCount int32) (ptr unsafe.Pointer, lenth int)
 //export Sum
 func Sum(a, b int) int {
 	return a + b
-}
-
-//export Free
-func Free(p unsafe.Pointer) {
-	C.free(p)
-}
-
-func str2ptr(str string) (ptr unsafe.Pointer, lenth int) {
-	b := []byte(str)
-	b, _ = ucs2.FromUTF8(b)
-
-	lenth = len(b)
-	ptr = C.malloc(C.uint(lenth))
-	C.memcpy(ptr, unsafe.Pointer(&b[0]), C.uint(lenth))
-
-	return
 }

@@ -8,6 +8,10 @@ GoInt __stdcall sum(GoInt a, GoInt b) {
 	return Sum(a, b);
 }
 
+GoInt __stdcall retVarPtr() {
+	return RetVarPtr();
+}
+
 void __stdcall cfree(void *p) {
 	Free(p);
 }
