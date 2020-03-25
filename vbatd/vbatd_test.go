@@ -29,4 +29,9 @@ func Test_func(t *testing.T) {
 	f = *((*float64)(unsafe.Pointer(&vv.Data)))
 	t.Log(f)
 
+	var bb [6]byte = [6]byte{64, 43, 32, 54, 23, 23}
+
+	var pbb = &bb
+	var i uintptr = uintptr(unsafe.Pointer(pbb))
+	t.Logf("%x, %x\n", i, &bb[0])
 }

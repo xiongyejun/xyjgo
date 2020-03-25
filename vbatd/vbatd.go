@@ -8,6 +8,7 @@ import (
 	"github.com/xiongyejun/xyjgo/ucs2"
 )
 
+// https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/vartype-function
 // VBA Variant第1个字节
 const (
 	VInteger = 0x2
@@ -20,10 +21,13 @@ const (
 	VBoolean = 0xb
 	VByte    = 0x11
 
-	SIZE_VBAVariant  = 0x10
-	IS_ARR_ADDR      = 0x20
-	IS_VAR_ADDR      = 0x40
-	IS_ARR_ADDR_ADDR = 0x60
+	// VBAVariant占用字节
+	SIZE_VBAVariant = 0x10
+
+	// VBAVariant b1代表的内容
+	IS_ARR_ADDR      = 0x20 // 是指向Arr的地址
+	IS_VAR_ADDR      = 0x40 // 是指向数据的地址
+	IS_ARR_ADDR_ADDR = 0x60 // 是指向Arr的地址的地址
 )
 
 type SafeArrayBound struct {
@@ -73,6 +77,8 @@ func init() {
 	sizeVBADataType[VBoolean] = 2
 	sizeVBADataType[VString] = 4
 }
+
+// VBAVariant转换为interface
 func Variants2interfaces(pParamArray uintptr, nCount int) (ret []interface{}, err error) {
 	ret = make([]interface{}, nCount)
 	for i := 0; i < nCount; i++ {
