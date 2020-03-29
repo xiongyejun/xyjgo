@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/axgle/mahonia"
 	"github.com/xiongyejun/xyjgo/colorPrint"
 	"github.com/xiongyejun/xyjgo/fileHeader"
 	"github.com/xiongyejun/xyjgo/vbaProject"
@@ -49,6 +50,32 @@ func main() {
 			if err = of.vp.Parse(of.b); err != nil {
 				fmt.Println(err)
 			} else {
+				// 为了方便在cmd里使用
+				if len(os.Args) == 3 {
+					if os.Args[2] != "getcode" {
+						fmt.Println("vba [file] [getcode]\n按文件名创建文件夹，并导出代码")
+						return
+					}
+					path := os.Args[1]
+					index := strings.LastIndex(path, ".")
+					if index == -1 {
+						path += "dir/"
+					} else {
+						path = path[:index] + "/"
+					}
+					os.Remove(path)
+					os.Mkdir(path, 0666)
+					for i := range of.vp.Module {
+						if err := saveModule(path, i); err != nil {
+							fmt.Println(err)
+							return
+						} else {
+							fmt.Printf("%d 模块输出成功：%s\r\n", i, of.vp.Module[i].Name)
+						}
+					}
+
+					return
+				}
 
 				r := bufio.NewReader(os.Stdin)
 				for {
@@ -104,7 +131,7 @@ func handleCommands(tokens []string) {
 		if index, err := of.vp.GetModuleIndex(moduleName); err != nil {
 			fmt.Println(err)
 		} else {
-			if err := saveModule(index); err != nil {
+			if err := saveModule("./", index); err != nil {
 				fmt.Println(err)
 			} else {
 				fmt.Printf("%d 模块输出成功：%s\r\n", index, moduleName)
@@ -121,7 +148,7 @@ func handleCommands(tokens []string) {
 		if index, err := strconv.Atoi(tokens[1]); err != nil {
 			fmt.Println(err)
 		} else {
-			if err := saveModule(index); err != nil {
+			if err := saveModule("./", index); err != nil {
 				fmt.Println(err)
 			} else {
 				fmt.Printf("%d 模块输出成功：%s\r\n", index, of.vp.Module[index].Name)
@@ -136,7 +163,7 @@ func handleCommands(tokens []string) {
 		}
 
 		for i := range of.vp.Module {
-			if err := saveModule(i); err != nil {
+			if err := saveModule("./", i); err != nil {
 				fmt.Println(err)
 				return
 			} else {
@@ -224,7 +251,7 @@ func handleCommands(tokens []string) {
 	}
 }
 
-func saveModule(moduleIndex int) (err error) {
+func saveModule(path string, moduleIndex int) (err error) {
 	var moduleName string = of.vp.Module[moduleIndex].Name
 
 	var str string
@@ -238,7 +265,10 @@ func saveModule(moduleIndex int) (err error) {
 		moduleName += ".bas"
 	}
 
-	if err = ioutil.WriteFile(moduleName, []byte(str), 0666); err != nil {
+	// 按GBK保存
+	encoder := mahonia.NewEncoder("gbk")
+	str = encoder.ConvertString(str)
+	if err = ioutil.WriteFile(path+moduleName, []byte(str), 0666); err != nil {
 		return
 	}
 
