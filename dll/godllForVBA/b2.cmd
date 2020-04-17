@@ -3,7 +3,7 @@ REM 编译32位的dll
 set GOARCH=386
 set GOROOT=C:\go386
 
-set "str=%path%"
+set str=%path%
 set path=C:\mingw32\MinGW\bin;%str%
 
 gcc.exe c\stdcall.c c\go.def c\go.a -shared -lwinmm -lWs2_32 -o go32.dll -Wl,--enable-stdcall-fixup,--out-implib,go.lib
