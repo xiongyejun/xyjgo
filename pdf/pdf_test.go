@@ -9,7 +9,7 @@ import (
 
 func Test_func(t *testing.T) {
 	t.Logf("%s\r\n", []byte{0x25, 0x50, 0x44, 0x46})
-	f, err := os.Open("1.pdf")
+	f, err := os.Open(`C:\Users\Administrator\Desktop\11\代码的未来.pdf`)
 	if err != nil {
 		t.Error(err)
 		return

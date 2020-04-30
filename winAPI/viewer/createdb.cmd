@@ -1,0 +1,1 @@
+sqlite3 winapi.sqlite3 < db.sql
