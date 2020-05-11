@@ -16,8 +16,8 @@ func str2ptr(str string) (ptr unsafe.Pointer, lenth int) {
 	b, _ = ucs2.FromUTF8(b)
 
 	lenth = len(b)
-	ptr = C.malloc(C.uint(lenth))
-	C.memcpy(ptr, unsafe.Pointer(&b[0]), C.uint(lenth))
+	ptr = C.malloc(C.size_t(lenth))
+	C.memcpy(ptr, unsafe.Pointer(&b[0]), C.size_t(lenth))
 
 	return
 }
@@ -35,8 +35,8 @@ func str2VarPtr(str string) (ret int32) {
 	//	b = append(b, []byte{0, 0, 0, 0}...)
 
 	lenth = int32(len(b))
-	ptr := C.malloc(C.uint(lenth))
-	C.memcpy(ptr, unsafe.Pointer(&b[0]), C.uint(lenth))
+	ptr := C.malloc(C.size_t(lenth))
+	C.memcpy(ptr, unsafe.Pointer(&b[0]), C.size_t(lenth))
 	ret = int32(uintptr(ptr))
 	ret += 6
 
