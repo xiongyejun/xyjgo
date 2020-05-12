@@ -11,6 +11,14 @@ import (
 	pdf "github.com/unidoc/unipdf/model"
 )
 
+// TODO 记得修改这个
+/*
+func (k *LicenseKey) IsLicensed() bool {
+	// return k.Tier != LicenseTierUnlicensed
+	return true
+}
+*/
+
 func main() {
 	if len(os.Args) == 1 {
 		printHelp()
@@ -54,6 +62,15 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+
+	case "e":
+		if len(os.Args) != 4 {
+			printHelp()
+		}
+		if err = extractImages(os.Args[2], os.Args[3]); err != nil {
+			fmt.Println(err)
+			return
+		}
 	default:
 		printHelp()
 	}
@@ -76,7 +93,7 @@ func imagesToPdf(imagesFolder, outputPath string) (err error) {
 			continue
 		}
 
-		fmt.Printf("Image: %s", imgPath)
+		fmt.Printf("Image: %s\n", imgPath)
 
 		var img *creator.Image
 		if img, err = c.NewImageFromFile(imgPath); err != nil {
@@ -162,8 +179,9 @@ func splitPdf(inputPath string, outputPath string, pageFrom int, pageTo int) (er
 
 func printHelp() {
 	fmt.Println(`
- i <imagesFolder> <outputPath> -- images_to_pdf
- s <inputPath> <outputPath> <pageFrom>, <pageTo>
- c <inputPath> <outputPath> -- Compress and optimize PDF
+ i <imagesFolder> <outputPath> -- images to pdf 图片创建pdf
+ s <inputPath> <outputPath> <pageFrom>, <pageTo> -- 拆分pdf
+ c <inputPath> <outputPath> -- Compress and optimize PDF 压缩pdf
+ e <inputPath> <outputPath> -- Extract images 提取图片
 	`)
 }
