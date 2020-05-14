@@ -71,6 +71,16 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+
+	case "m":
+		if len(os.Args) < 4 {
+			printHelp()
+		}
+		if err = merge(os.Args[2], os.Args[3:]); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Merge OK.")
 	default:
 		printHelp()
 	}
@@ -183,5 +193,6 @@ func printHelp() {
  s <inputPath> <outputPath> <pageFrom>, <pageTo> -- 拆分pdf
  c <inputPath> <outputPath> -- Compress and optimize PDF 压缩pdf
  e <inputPath> <outputPath> -- Extract images 提取图片
+ m <outputPath> <inputPaths...> -- pdf merge 合并pdf
 	`)
 }
