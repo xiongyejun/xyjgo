@@ -81,6 +81,17 @@ func main() {
 			return
 		}
 		fmt.Println("Merge OK.")
+
+	case "r":
+		//  r <inputPaths> <outputPath> <degrees> <page...>
+		if len(os.Args) < 6 {
+			printHelp()
+		}
+		if err = rotate(os.Args[2], os.Args[3], os.Args[4], os.Args[5:]); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("Rotate OK.")
 	default:
 		printHelp()
 	}
@@ -194,5 +205,6 @@ func printHelp() {
  c <inputPath> <outputPath> -- Compress and optimize PDF 压缩pdf
  e <inputPath> <outputPath> -- Extract images 提取图片
  m <outputPath> <inputPaths...> -- pdf merge 合并pdf
+ r <inputPaths> <outputPath> <degrees> <page...> -- rotate pdf 旋转pdf，degrees角度(90度的整数)，page base 1
 	`)
 }
