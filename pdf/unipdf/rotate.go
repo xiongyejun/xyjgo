@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -10,7 +11,7 @@ import (
 )
 
 // Rotate all pages by 90 degrees.
-func rotate(inputPath, outputPath, degrees string, pages []string) (err error) {
+func rotate(inputPath, outputPath, degrees, spages string) (err error) {
 	var angleDeg int64
 	if angleDeg, err = strconv.ParseInt(degrees, 0, 64); err != nil {
 		return
@@ -53,20 +54,28 @@ func rotate(inputPath, outputPath, degrees string, pages []string) (err error) {
 		return err
 	}
 
+	// 解析页面index
+	var pages []int
+	if pages, err = getPages(spages); err != nil {
+		return
+	}
 	// 记录需要调整的页面
-	var bRotate []bool = make([]bool, numPages)
+	var bRotate []bool = make([]bool, numPages+1)
 	for i := range pages {
-		var pageNum int
-		if pageNum, err = strconv.Atoi(pages[i]); err != nil {
+		if pages[i] < 1 {
+			err = errors.New("page base = 1")
 			return
 		}
-		bRotate[pageNum-1] = true
+
+		if pages[i] > numPages {
+			err = errors.New(fmt.Sprintf("%d超过了页面总数%d", pages[i], numPages))
+			return
+		}
+		bRotate[pages[i]] = true
 	}
 
 	for i := 0; i < numPages; i++ {
-		pageNum := i + 1
-
-		page, err := pdfReader.GetPage(pageNum)
+		page, err := pdfReader.GetPage(i + 1)
 		if err != nil {
 			return err
 		}
@@ -76,7 +85,7 @@ func rotate(inputPath, outputPath, degrees string, pages []string) (err error) {
 			return err
 		}
 
-		if bRotate[i] {
+		if bRotate[i+1] {
 			// Do the rotation.
 			var rotation int64
 			if page.Rotate != nil {

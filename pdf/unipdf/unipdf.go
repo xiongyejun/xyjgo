@@ -1,18 +1,16 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
-
-	"github.com/unidoc/unipdf/creator"
-	pdf "github.com/unidoc/unipdf/model"
+	"strings"
 )
 
 // TODO 记得修改这个
 /*
+github.com\unidoc\unipdf\common\license\key.go
 func (k *LicenseKey) IsLicensed() bool {
 	// return k.Tier != LicenseTierUnlicensed
 	return true
@@ -24,10 +22,10 @@ func main() {
 		printHelp()
 		return
 	}
-
 	var err error
 	switch os.Args[1] {
 	case "i":
+		// i <imagesFolder> <outputPath> -- images to pdf 图片创建pdf
 		if len(os.Args) != 4 {
 			printHelp()
 		}
@@ -35,26 +33,21 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("images to pdf OK.")
 
 	case "s":
-		if len(os.Args) != 6 {
+		// s <inputPath> <outputPath> <pages> -- 拆分pdf
+		if len(os.Args) != 5 {
 			printHelp()
 		}
-		var pageFrom, pageTo int
-		if pageFrom, err = strconv.Atoi(os.Args[4]); err != nil {
+		if err = splitPdf(os.Args[2], os.Args[3], os.Args[4]); err != nil {
 			fmt.Println(err)
 			return
 		}
-		if pageTo, err = strconv.Atoi(os.Args[5]); err != nil {
-			fmt.Println(err)
-			return
-		}
-		if err = splitPdf(os.Args[2], os.Args[3], pageFrom, pageTo); err != nil {
-			fmt.Println(err)
-			return
-		}
+		fmt.Println("Split OK.")
 
 	case "c":
+		// c <inputPath> <outputPath> -- Compress and optimize PDF 压缩pdf
 		if len(os.Args) != 4 {
 			printHelp()
 		}
@@ -62,8 +55,10 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("Compress OK.")
 
 	case "e":
+		// e <inputPath> <outputPath> -- Extract images 提取图片
 		if len(os.Args) != 4 {
 			printHelp()
 		}
@@ -71,8 +66,10 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("Extract OK.")
 
 	case "m":
+		// m <outputPath> <inputPaths...> -- pdf merge 合并pdf
 		if len(os.Args) < 4 {
 			printHelp()
 		}
@@ -83,11 +80,11 @@ func main() {
 		fmt.Println("Merge OK.")
 
 	case "r":
-		//  r <inputPaths> <outputPath> <degrees> <page...>
-		if len(os.Args) < 6 {
+		// r <inputPaths> <outputPath> <degrees> <pages> -- rotate旋转pdf，degrees角度(90度的整数)，page base 1
+		if len(os.Args) != 6 {
 			printHelp()
 		}
-		if err = rotate(os.Args[2], os.Args[3], os.Args[4], os.Args[5:]); err != nil {
+		if err = rotate(os.Args[2], os.Args[3], os.Args[4], os.Args[5]); err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -97,114 +94,49 @@ func main() {
 	}
 }
 
-func imagesToPdf(imagesFolder, outputPath string) (err error) {
-	var entrys []os.FileInfo
-	if entrys, err = ioutil.ReadDir(imagesFolder); err != nil {
-		return
-	}
+// <pages> 逗号分隔，支持1-10形式
+func getPages(pages string) (page []int, err error) {
+	arr := strings.Split(pages, ",")
 
-	c := creator.New()
-	for i := range entrys {
-		if entrys[i].IsDir() {
-			continue
-		}
+	var tmp int
+	for i := range arr {
+		tmparr := strings.Split(arr[i], "-")
+		if len(tmparr) == 1 {
+			if tmp, err = strconv.Atoi(tmparr[0]); err != nil {
+				return
+			}
+			page = append(page, tmp)
+		} else if len(tmparr) == 2 {
+			var fromP, toP int
+			if fromP, err = strconv.Atoi(tmparr[0]); err != nil {
+				return
+			}
+			if toP, err = strconv.Atoi(tmparr[1]); err != nil {
+				return
+			}
 
-		imgPath := entrys[i].Name()
-		if filepath.Ext(imgPath) != ".jpg" && filepath.Ext(imgPath) != ".png" {
-			continue
-		}
-
-		fmt.Printf("Image: %s\n", imgPath)
-
-		var img *creator.Image
-		if img, err = c.NewImageFromFile(imgPath); err != nil {
-			return
-		}
-		img.ScaleToWidth(612.0)
-
-		// Use page width of 612 points, and calculate the height proportionally based on the image.
-		// Standard PPI is 72 points per inch, thus a width of 8.5"
-		height := 612.0 * img.Height() / img.Width()
-		c.SetPageSize(creator.PageSize{612, height})
-		c.NewPage()
-		img.SetPos(0, 0)
-		if err = c.Draw(img); err != nil {
-			return
-		}
-	}
-
-	return c.WriteToFile(outputPath)
-}
-
-func splitPdf(inputPath string, outputPath string, pageFrom int, pageTo int) (err error) {
-	pdfWriter := pdf.NewPdfWriter()
-
-	f, err := os.Open(inputPath)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	pdfReader, err := pdf.NewPdfReaderLazy(f)
-	if err != nil {
-		return
-	}
-
-	isEncrypted, err := pdfReader.IsEncrypted()
-	if err != nil {
-		return
-	}
-
-	if isEncrypted {
-		_, err = pdfReader.Decrypt([]byte(""))
-		if err != nil {
-			return
-		}
-	}
-
-	numPages, err := pdfReader.GetNumPages()
-	if err != nil {
-		return
-	}
-
-	if numPages < pageTo {
-		return
-	}
-
-	for i := pageFrom; i <= pageTo; i++ {
-		pageNum := i
-
-		var page *pdf.PdfPage
-		if page, err = pdfReader.GetPage(pageNum); err != nil {
+			for j := fromP; j <= toP; j++ {
+				page = append(page, j)
+			}
+		} else {
+			err = errors.New("不能多于1个[-]")
 			return
 		}
 
-		if err = pdfWriter.AddPage(page); err != nil {
-			return
-		}
 	}
 
-	fWrite, err := os.Create(outputPath)
-	if err != nil {
-		return
-	}
-	defer fWrite.Close()
-
-	err = pdfWriter.Write(fWrite)
-	if err != nil {
-		return
-	}
-
-	return nil
+	return
 }
 
 func printHelp() {
 	fmt.Println(`
  i <imagesFolder> <outputPath> -- images to pdf 图片创建pdf
- s <inputPath> <outputPath> <pageFrom>, <pageTo> -- 拆分pdf
+ s <inputPath> <outputPath> <pages> -- 拆分pdf
  c <inputPath> <outputPath> -- Compress and optimize PDF 压缩pdf
  e <inputPath> <outputPath> -- Extract images 提取图片
  m <outputPath> <inputPaths...> -- pdf merge 合并pdf
- r <inputPaths> <outputPath> <degrees> <page...> -- rotate pdf 旋转pdf，degrees角度(90度的整数)，page base 1
+ r <inputPaths> <outputPath> <degrees> <pages> -- rotate旋转pdf，degrees角度(90度的整数)，page base 1
+
+ <pages> 逗号分隔，支持1-10形式
 	`)
 }
