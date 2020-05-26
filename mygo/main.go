@@ -28,6 +28,15 @@ func main() {
 		fEpubSet()
 	case "xsset":
 		xsTemplateSet()
+	case "dl":
+		if len(os.Args) != 4 {
+			printHelp()
+			return
+		}
+		if err := download(os.Args[2], os.Args[3]); err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println("download ok")
 	default:
 		fmt.Println("未设置的命令。")
 		printHelp()
@@ -212,5 +221,6 @@ func printHelp() {
  mygo xsdown--根据dirJson.txt下载小说，使用前先把<down.set>的信息设置好，固定下载在srcHtml文件夹内
  mygo xsepub--创建epub，使用前先把<epub.set>的信息设置好，如果有folder里有子folder，则构建多层次目录
  mygo xsset--输出set的模板格式
+ mygo dl <url> <savename>--download 下载资源
 	`)
 }
