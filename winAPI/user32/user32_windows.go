@@ -9,6 +9,7 @@ import (
 
 var (
 	lib                      uintptr
+	destroyWindow            uintptr
 	sendInput                uintptr
 	keybd_event              uintptr
 	getForegroundWindow      uintptr
@@ -17,6 +18,7 @@ var (
 	getWindowTextLength      uintptr
 	sendMessage              uintptr
 	postMessage              uintptr
+	getMessage               uintptr
 	mapVirtualKey            uintptr
 	blockInput               uintptr
 	getDC                    uintptr
@@ -26,6 +28,7 @@ var (
 	getWindowThreadProcessId uintptr
 	findWindowEx             uintptr
 	messageBox               uintptr
+	postQuitMessage          uintptr
 	getActiveWindow          uintptr
 	getWindowLong            uintptr
 	setWindowLong            uintptr
@@ -33,6 +36,15 @@ var (
 	setWindowLongPtr         uintptr
 	updateWindow             uintptr
 	showWindow               uintptr
+	registerClassEx          uintptr
+	unregisterClass          uintptr
+	defWindowProc            uintptr
+	getModuleHandle          uintptr
+	loadIcon                 uintptr
+	loadCursor               uintptr
+	createWindowEx           uintptr
+	translateMessage         uintptr
+	dispatchMessage          uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -44,6 +56,7 @@ func init() {
 	lib = win.MustLoadLibrary("user32.dll")
 
 	// Functions
+	destroyWindow = win.MustGetProcAddress(lib, "DestroyWindow")
 	sendInput = win.MustGetProcAddress(lib, "SendInput")
 	keybd_event = win.MustGetProcAddress(lib, "keybd_event")
 	getForegroundWindow = win.MustGetProcAddress(lib, "GetForegroundWindow")
@@ -53,6 +66,9 @@ func init() {
 	getWindowTextLength = win.MustGetProcAddress(lib, "GetWindowTextLengthW")
 	sendMessage = win.MustGetProcAddress(lib, "SendMessageW")
 	postMessage = win.MustGetProcAddress(lib, "PostMessageW")
+	getMessage = win.MustGetProcAddress(lib, "GetMessageW")
+	translateMessage = win.MustGetProcAddress(lib, "TranslateMessage")
+	dispatchMessage = win.MustGetProcAddress(lib, "DispatchMessageW")
 	mapVirtualKey = win.MustGetProcAddress(lib, "MapVirtualKeyW")
 	blockInput = win.MustGetProcAddress(lib, "BlockInput")
 	getDC = win.MustGetProcAddress(lib, "GetDC")
@@ -68,7 +84,117 @@ func init() {
 	//	setWindowLongPtr = win.MustGetProcAddress(lib, "SetWindowLongPtrW")
 	updateWindow = win.MustGetProcAddress(lib, "UpdateWindow")
 	showWindow = win.MustGetProcAddress(lib, "ShowWindow")
+	registerClassEx = win.MustGetProcAddress(lib, "RegisterClassExW")
+	unregisterClass = win.MustGetProcAddress(lib, "UnregisterClassW")
+	defWindowProc = win.MustGetProcAddress(lib, "DefWindowProcW")
+	loadIcon = win.MustGetProcAddress(lib, "LoadIconW")
+	loadCursor = win.MustGetProcAddress(lib, "LoadCursorW")
+	createWindowEx = win.MustGetProcAddress(lib, "CreateWindowExW")
+	postQuitMessage = win.MustGetProcAddress(lib, "PostQuitMessage")
 }
+
+// Predefined icon constants
+const (
+	IDI_APPLICATION = 32512
+	IDI_HAND        = 32513
+	IDI_QUESTION    = 32514
+	IDI_EXCLAMATION = 32515
+	IDI_ASTERISK    = 32516
+	IDI_WINLOGO     = 32517
+	IDI_SHIELD      = 32518
+	IDI_WARNING     = IDI_EXCLAMATION
+	IDI_ERROR       = IDI_HAND
+	IDI_INFORMATION = IDI_ASTERISK
+)
+
+// Predefined cursor constants
+const (
+	IDC_ARROW       = 32512
+	IDC_IBEAM       = 32513
+	IDC_WAIT        = 32514
+	IDC_CROSS       = 32515
+	IDC_UPARROW     = 32516
+	IDC_SIZENWSE    = 32642
+	IDC_SIZENESW    = 32643
+	IDC_SIZEWE      = 32644
+	IDC_SIZENS      = 32645
+	IDC_SIZEALL     = 32646
+	IDC_NO          = 32648
+	IDC_HAND        = 32649
+	IDC_APPSTARTING = 32650
+	IDC_HELP        = 32651
+	IDC_ICON        = 32641
+	IDC_SIZE        = 32640
+)
+
+// Predefined brushes constants
+const (
+	COLOR_3DDKSHADOW              = 21
+	COLOR_3DFACE                  = 15
+	COLOR_3DHILIGHT               = 20
+	COLOR_3DHIGHLIGHT             = 20
+	COLOR_3DLIGHT                 = 22
+	COLOR_BTNHILIGHT              = 20
+	COLOR_3DSHADOW                = 16
+	COLOR_ACTIVEBORDER            = 10
+	COLOR_ACTIVECAPTION           = 2
+	COLOR_APPWORKSPACE            = 12
+	COLOR_BACKGROUND              = 1
+	COLOR_DESKTOP                 = 1
+	COLOR_BTNFACE                 = 15
+	COLOR_BTNHIGHLIGHT            = 20
+	COLOR_BTNSHADOW               = 16
+	COLOR_BTNTEXT                 = 18
+	COLOR_CAPTIONTEXT             = 9
+	COLOR_GRAYTEXT                = 17
+	COLOR_HIGHLIGHT               = 13
+	COLOR_HIGHLIGHTTEXT           = 14
+	COLOR_INACTIVEBORDER          = 11
+	COLOR_INACTIVECAPTION         = 3
+	COLOR_INACTIVECAPTIONTEXT     = 19
+	COLOR_INFOBK                  = 24
+	COLOR_INFOTEXT                = 23
+	COLOR_MENU                    = 4
+	COLOR_MENUTEXT                = 7
+	COLOR_SCROLLBAR               = 0
+	COLOR_WINDOW                  = 5
+	COLOR_WINDOWFRAME             = 6
+	COLOR_WINDOWTEXT              = 8
+	COLOR_HOTLIGHT                = 26
+	COLOR_GRADIENTACTIVECAPTION   = 27
+	COLOR_GRADIENTINACTIVECAPTION = 28
+)
+
+// Window style constants
+const (
+	WS_OVERLAPPED       = 0X00000000
+	WS_POPUP            = 0X80000000
+	WS_CHILD            = 0X40000000
+	WS_MINIMIZE         = 0X20000000
+	WS_VISIBLE          = 0X10000000
+	WS_DISABLED         = 0X08000000
+	WS_CLIPSIBLINGS     = 0X04000000
+	WS_CLIPCHILDREN     = 0X02000000
+	WS_MAXIMIZE         = 0X01000000
+	WS_CAPTION          = 0X00C00000
+	WS_BORDER           = 0X00800000
+	WS_DLGFRAME         = 0X00400000
+	WS_VSCROLL          = 0X00200000
+	WS_HSCROLL          = 0X00100000
+	WS_SYSMENU          = 0X00080000
+	WS_THICKFRAME       = 0X00040000
+	WS_GROUP            = 0X00020000
+	WS_TABSTOP          = 0X00010000
+	WS_MINIMIZEBOX      = 0X00020000
+	WS_MAXIMIZEBOX      = 0X00010000
+	WS_TILED            = 0X00000000
+	WS_ICONIC           = 0X20000000
+	WS_SIZEBOX          = 0X00040000
+	WS_OVERLAPPEDWINDOW = 0X00000000 | 0X00C00000 | 0X00080000 | 0X00040000 | 0X00020000 | 0X00010000
+	WS_POPUPWINDOW      = 0X80000000 | 0X00800000 | 0X00080000
+	WS_CHILDWINDOW      = 0X40000000
+)
+const CW_USEDEFAULT = ^0x7fffffff
 
 // INPUT Type
 const (
@@ -702,7 +828,7 @@ const (
 	SW_FORCEMINIMIZE   = 11
 )
 
-func ShowWindow(hWnd uint32, nCmdShow int32) bool {
+func ShowWindow(hWnd win.HWND, nCmdShow int32) bool {
 	ret, _, _ := syscall.Syscall(showWindow, 2,
 		uintptr(hWnd),
 		uintptr(nCmdShow),
@@ -710,6 +836,162 @@ func ShowWindow(hWnd uint32, nCmdShow int32) bool {
 
 	return ret != 0
 }
+
+// Window class styles
+const (
+	CS_VREDRAW         = 0x00000001
+	CS_HREDRAW         = 0x00000002
+	CS_KEYCVTWINDOW    = 0x00000004
+	CS_DBLCLKS         = 0x00000008
+	CS_OWNDC           = 0x00000020
+	CS_CLASSDC         = 0x00000040
+	CS_PARENTDC        = 0x00000080
+	CS_NOKEYCVT        = 0x00000100
+	CS_NOCLOSE         = 0x00000200
+	CS_SAVEBITS        = 0x00000800
+	CS_BYTEALIGNCLIENT = 0x00001000
+	CS_BYTEALIGNWINDOW = 0x00002000
+	CS_GLOBALCLASS     = 0x00004000
+	CS_IME             = 0x00010000
+	CS_DROPSHADOW      = 0x00020000
+)
+
+type WNDCLASSEX struct {
+	CbSize        uint32
+	Style         uint32
+	LpfnWndProc   uintptr
+	CbClsExtra    int32
+	CbWndExtra    int32
+	HInstance     win.HINSTANCE
+	HIcon         win.HICON
+	HCursor       win.HCURSOR
+	HbrBackground win.HBRUSH
+	LpszMenuName  *uint16
+	LpszClassName *uint16
+	HIconSm       win.HICON
+}
+
+func RegisterClassEx(windowClass *WNDCLASSEX) win.ATOM {
+	ret, _, _ := syscall.Syscall(registerClassEx, 1,
+		uintptr(unsafe.Pointer(windowClass)),
+		0,
+		0)
+
+	return win.ATOM(ret)
+}
+func UnregisterClass(name *uint16) bool {
+	ret, _, _ := syscall.Syscall(unregisterClass, 1,
+		uintptr(unsafe.Pointer(name)),
+		0,
+		0)
+
+	return ret != 0
+}
+
+func DefWindowProc(hWnd win.HWND, Msg uint32, wParam, lParam uintptr) uintptr {
+	ret, _, _ := syscall.Syscall6(defWindowProc, 4,
+		uintptr(hWnd),
+		uintptr(Msg),
+		wParam,
+		lParam,
+		0,
+		0)
+
+	return ret
+}
+
+func LoadIcon(hInstance win.HINSTANCE, lpIconName *uint16) win.HICON {
+	ret, _, _ := syscall.Syscall(loadIcon, 2,
+		uintptr(hInstance),
+		uintptr(unsafe.Pointer(lpIconName)),
+		0)
+
+	return win.HICON(ret)
+}
+
+func LoadCursor(hInstance win.HINSTANCE, lpCursorName *uint16) win.HCURSOR {
+	ret, _, _ := syscall.Syscall(loadCursor, 2,
+		uintptr(hInstance),
+		uintptr(unsafe.Pointer(lpCursorName)),
+		0)
+
+	return win.HCURSOR(ret)
+}
+
+func CreateWindowEx(dwExStyle uint32, lpClassName, lpWindowName *uint16, dwStyle uint32, x, y, nWidth, nHeight int32, hWndParent win.HWND, hMenu win.HMENU, hInstance win.HINSTANCE, lpParam unsafe.Pointer) win.HWND {
+	ret, _, _ := syscall.Syscall12(createWindowEx, 12,
+		uintptr(dwExStyle),
+		uintptr(unsafe.Pointer(lpClassName)),
+		uintptr(unsafe.Pointer(lpWindowName)),
+		uintptr(dwStyle),
+		uintptr(x),
+		uintptr(y),
+		uintptr(nWidth),
+		uintptr(nHeight),
+		uintptr(hWndParent),
+		uintptr(hMenu),
+		uintptr(hInstance),
+		uintptr(lpParam))
+
+	return win.HWND(ret)
+}
+
+type POINT struct {
+	X, Y int32
+}
+type MSG struct {
+	HWnd    win.HWND
+	Message uint32
+	WParam  uintptr
+	LParam  uintptr
+	Time    uint32
+	Pt      POINT
+}
+
+func GetMessage(msg *MSG, hWnd win.HWND, msgFilterMin, msgFilterMax uint32) int32 {
+	ret, _, _ := syscall.Syscall6(getMessage, 4,
+		uintptr(unsafe.Pointer(msg)),
+		uintptr(hWnd),
+		uintptr(msgFilterMin),
+		uintptr(msgFilterMax),
+		0,
+		0)
+
+	return int32(ret)
+}
+func TranslateMessage(msg *MSG) bool {
+	ret, _, _ := syscall.Syscall(translateMessage, 1,
+		uintptr(unsafe.Pointer(msg)),
+		0,
+		0)
+
+	return ret != 0
+}
+func DispatchMessage(msg *MSG) uintptr {
+	ret, _, _ := syscall.Syscall(dispatchMessage, 1,
+		uintptr(unsafe.Pointer(msg)),
+		0,
+		0)
+
+	return ret
+}
+
+func DestroyWindow(hWnd win.HWND) bool {
+	ret, _, _ := syscall.Syscall(destroyWindow, 1,
+		uintptr(hWnd),
+		0,
+		0)
+
+	return ret != 0
+}
+
+func PostQuitMessage(exitCode int32) {
+	syscall.Syscall(postQuitMessage, 1,
+		uintptr(exitCode),
+		0,
+		0)
+}
+
 func Free() {
 	syscall.FreeLibrary(syscall.Handle(lib))
 }

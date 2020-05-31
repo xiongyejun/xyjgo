@@ -7,6 +7,39 @@ import (
 	"github.com/axgle/mahonia"
 )
 
+type (
+	ATOM          = uint16
+	HANDLE        = uintptr
+	HGLOBAL       = HANDLE
+	HINSTANCE     = HANDLE
+	LCID          = uint32
+	LCTYPE        = uint32
+	LANGID        = uint16
+	HMODULE       = uintptr
+	HWINEVENTHOOK = HANDLE
+	HRSRC         = uintptr
+
+	HACCEL    = HANDLE
+	HCURSOR   = HANDLE
+	HDWP      = HANDLE
+	HICON     = HANDLE
+	HMENU     = HANDLE
+	HMONITOR  = HANDLE
+	HRAWINPUT = HANDLE
+	HWND      = HANDLE
+
+	COLORREF     = uint32
+	HBITMAP      = HGDIOBJ
+	HBRUSH       = HGDIOBJ
+	HDC          = HANDLE
+	HFONT        = HGDIOBJ
+	HGDIOBJ      = HANDLE
+	HENHMETAFILE = HANDLE
+	HPALETTE     = HGDIOBJ
+	HPEN         = HGDIOBJ
+	HRGN         = HGDIOBJ
+)
+
 const (
 	CODE_UTF16 int = iota
 	CODE_GBK
@@ -52,6 +85,10 @@ func StrPtr(str string, code int) uintptr {
 	}
 
 	return uintptr(0)
+}
+
+func MAKEINTRESOURCE(id uintptr) *uint16 {
+	return (*uint16)(unsafe.Pointer(id))
 }
 
 func GetErrString(errno int) string {

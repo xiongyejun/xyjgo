@@ -27,6 +27,7 @@ var (
 	process32First           uintptr
 	process32Next            uintptr
 	getLastError             uintptr
+	getModuleHandle          uintptr
 )
 
 // GlobalAlloc flags
@@ -59,6 +60,7 @@ func init() {
 	process32Next = win.MustGetProcAddress(lib, "Process32Next")
 	process32First = win.MustGetProcAddress(lib, "Process32First")
 	getLastError = win.MustGetProcAddress(lib, "GetLastError")
+	getModuleHandle = win.MustGetProcAddress(lib, "GetModuleHandleW")
 }
 
 func GlobalAlloc(uFlags uint32, dwBytes uintptr) uint32 {
@@ -308,6 +310,15 @@ func GetPIDByProcessName(processName string) (ret uint32, err error) {
 	}
 
 	return
+}
+
+func GetModuleHandle(lpModuleName *uint16) win.HINSTANCE {
+	ret, _, _ := syscall.Syscall(getModuleHandle, 1,
+		uintptr(unsafe.Pointer(lpModuleName)),
+		0,
+		0)
+
+	return win.HINSTANCE(ret)
 }
 
 func Free() {
