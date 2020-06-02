@@ -45,6 +45,7 @@ var (
 	createWindowEx           uintptr
 	translateMessage         uintptr
 	dispatchMessage          uintptr
+	setParent                uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -91,6 +92,7 @@ func init() {
 	loadCursor = win.MustGetProcAddress(lib, "LoadCursorW")
 	createWindowEx = win.MustGetProcAddress(lib, "CreateWindowExW")
 	postQuitMessage = win.MustGetProcAddress(lib, "PostQuitMessage")
+	setParent = win.MustGetProcAddress(lib, "SetParent")
 }
 
 // Predefined icon constants
@@ -195,6 +197,36 @@ const (
 	WS_CHILDWINDOW      = 0X40000000
 )
 const CW_USEDEFAULT = ^0x7fffffff
+
+// ComboBox styles
+const (
+	CBS_SIMPLE            = 0x0001
+	CBS_DROPDOWN          = 0x0002
+	CBS_DROPDOWNLIST      = 0x0003
+	CBS_OWNERDRAWFIXED    = 0x0010
+	CBS_OWNERDRAWVARIABLE = 0x0020
+	CBS_AUTOHSCROLL       = 0x0040
+	CBS_OEMCONVERT        = 0x0080
+	CBS_SORT              = 0x0100
+	CBS_HASSTRINGS        = 0x0200
+	CBS_NOINTEGRALHEIGHT  = 0x0400
+	CBS_DISABLENOSCROLL   = 0x0800
+	CBS_UPPERCASE         = 0x2000
+	CBS_LOWERCASE         = 0x4000
+)
+
+const (
+	SBS_BOTTOMALIGN             = 0x4
+	SBS_HORZ                    = 0x0
+	SBS_LEFTALIGN               = 0x2
+	SBS_RIGHTALIGN              = 0x4
+	SBS_SIZEBOX                 = 0x8
+	SBS_SIZEBOXBOTTOMRIGHTALIGN = 0x4
+	SBS_SIZEBOXTOPLEFTALIGN     = 0x2
+	SBS_SIZEGRIP                = 0x10
+	SBS_TOPALIGN                = 0x2
+	SBS_VERT                    = 0x1
+)
 
 // INPUT Type
 const (
@@ -446,6 +478,27 @@ const (
 	WM_MOUSEHOVER             = 0X2A1
 	WM_MOUSELEAVE             = 0X2A3
 	WM_CLIPBOARDUPDATE        = 0x031D
+)
+
+// ListBox style
+const (
+	LBS_NOTIFY            = 0x0001
+	LBS_SORT              = 0x0002
+	LBS_NOREDRAW          = 0x0004
+	LBS_MULTIPLESEL       = 0x0008
+	LBS_OWNERDRAWFIXED    = 0x0010
+	LBS_OWNERDRAWVARIABLE = 0x0020
+	LBS_HASSTRINGS        = 0x0040
+	LBS_USETABSTOPS       = 0x0080
+	LBS_NOINTEGRALHEIGHT  = 0x0100
+	LBS_MULTICOLUMN       = 0x0200
+	LBS_WANTKEYBOARDINPUT = 0x0400
+	LBS_EXTENDEDSEL       = 0x0800
+	LBS_DISABLENOSCROLL   = 0x1000
+	LBS_NODATA            = 0x2000
+	LBS_NOSEL             = 0x4000
+	LBS_COMBOBOX          = 0x8000
+	LBS_STANDARD          = LBS_NOTIFY | LBS_SORT | WS_BORDER | WS_VSCROLL
 )
 
 type MOUSEINPUT struct {
@@ -801,7 +854,7 @@ func GetWindowLongPtr(hWnd uint32, index int32) uintptr {
 
 	return ret
 }
-func UpdateWindow(hwnd uint32) bool {
+func UpdateWindow(hwnd win.HWND) bool {
 	ret, _, _ := syscall.Syscall(updateWindow, 1,
 		uintptr(hwnd),
 		0,
@@ -854,6 +907,37 @@ const (
 	CS_GLOBALCLASS     = 0x00004000
 	CS_IME             = 0x00010000
 	CS_DROPSHADOW      = 0x00020000
+)
+
+// Button style constants
+const (
+	BS_3STATE          = 5
+	BS_AUTO3STATE      = 6
+	BS_AUTOCHECKBOX    = 3
+	BS_AUTORADIOBUTTON = 9
+	BS_BITMAP          = 128
+	BS_BOTTOM          = 0X800
+	BS_CENTER          = 0X300
+	BS_CHECKBOX        = 2
+	BS_DEFPUSHBUTTON   = 1
+	BS_GROUPBOX        = 7
+	BS_ICON            = 64
+	BS_LEFT            = 256
+	BS_LEFTTEXT        = 32
+	BS_MULTILINE       = 0X2000
+	BS_NOTIFY          = 0X4000
+	BS_OWNERDRAW       = 0XB
+	BS_PUSHBUTTON      = 0
+	BS_PUSHLIKE        = 4096
+	BS_RADIOBUTTON     = 4
+	BS_RIGHT           = 512
+	BS_RIGHTBUTTON     = 32
+	BS_SPLITBUTTON     = 0x0000000c
+	BS_TEXT            = 0
+	BS_TOP             = 0X400
+	BS_USERBUTTON      = 8
+	BS_VCENTER         = 0XC00
+	BS_FLAT            = 0X8000
 )
 
 type WNDCLASSEX struct {
@@ -932,6 +1016,15 @@ func CreateWindowEx(dwExStyle uint32, lpClassName, lpWindowName *uint16, dwStyle
 		uintptr(hMenu),
 		uintptr(hInstance),
 		uintptr(lpParam))
+
+	return win.HWND(ret)
+}
+
+func SetParent(hWnd win.HWND, parentHWnd win.HWND) win.HWND {
+	ret, _, _ := syscall.Syscall(setParent, 2,
+		uintptr(hWnd),
+		uintptr(parentHWnd),
+		0)
 
 	return win.HWND(ret)
 }

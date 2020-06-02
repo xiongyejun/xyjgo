@@ -1,8 +1,9 @@
 // 窗体
 // 1、注册窗体类
 // 2、创建窗体
-// 3、轮询消息
-// 4、销毁窗体
+// 3、显示窗体
+// 4、轮询消息
+// 5、销毁窗体
 
 package form
 
@@ -11,7 +12,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	// win1 "github.com/lxn/win"
+	"github.com/xiongyejun/xyjgo/winAPI/ui"
+
 	"github.com/xiongyejun/xyjgo/winAPI/kernel32"
 	"github.com/xiongyejun/xyjgo/winAPI/user32"
 	"github.com/xiongyejun/xyjgo/winAPI/win"
@@ -29,17 +31,17 @@ type Form struct {
 
 	name   string
 	lpName *uint16
+
+	Left, Top, Width, Height int32
+
+	Controls []ui.Controler
 }
 
 var handle win.HANDLE = kernel32.GetModuleHandle(nil)
-var lpszClassName *uint16
+var lpszClassName *uint16 = syscall.StringToUTF16Ptr(CLASS_NAME)
 var fhwnd win.HWND
 
 func init() {
-	var err error
-	if lpszClassName, err = syscall.UTF16PtrFromString(CLASS_NAME); err != nil {
-		panic(err)
-	}
 	if err := registerWindowClass(); err != nil {
 		panic(err)
 	}
@@ -50,21 +52,32 @@ func New() (ret *Form) {
 	ret.SetName("xyjForm")
 	ret.lpszClassName = lpszClassName
 	ret.handle = handle
+	ret.Left = user32.CW_USEDEFAULT
+	ret.Top = user32.CW_USEDEFAULT
+	ret.Width = user32.CW_USEDEFAULT
+	ret.Height = user32.CW_USEDEFAULT
 
 	return
 }
 
-// 显示窗体
-func (me *Form) Show() {
-	defer user32.UnregisterClass(me.lpszClassName)
-
-	me.hwnd = win.HWND(user32.CreateWindowEx(0, me.lpszClassName, me.lpName, user32.WS_OVERLAPPEDWINDOW, user32.CW_USEDEFAULT, user32.CW_USEDEFAULT, 208, 150, 0, 0, me.handle, nil))
+// 创建窗体
+func (me *Form) Create(parent ui.Container) {
+	me.hwnd = win.HWND(user32.CreateWindowEx(0, me.lpszClassName, me.lpName, user32.WS_OVERLAPPEDWINDOW, me.Left, me.Top, me.Width, me.Height, 0, 0, me.handle, nil))
 	if me.hwnd == 0 {
 		panic("CreateWindowEx == 0")
 	}
 	fhwnd = me.hwnd
-	user32.ShowWindow(me.hwnd, user32.SW_SHOWNORMAL)
+}
 
+// 显示窗体
+func (me *Form) Show() {
+	user32.ShowWindow(me.hwnd, user32.SW_SHOWNORMAL)
+	user32.UpdateWindow(me.hwnd)
+
+}
+
+// 进入消息循环
+func (me *Form) LoopMessage() {
 	var msg *user32.MSG = new(user32.MSG)
 	// 返回值：如果函数取得WM_QUIT之外的其他消息，返回非零值
 	// 如果函数取得WM_QUIT消息，返回值是零
@@ -73,17 +86,29 @@ func (me *Form) Show() {
 		user32.TranslateMessage(msg)
 		user32.DispatchMessage(msg)
 	}
+}
 
+// 获取子控件
+func (me *Form) GetControls() []ui.Controler {
+	return me.Controls
+}
+func (me *Form) AddControl(ctl ui.Controler) {
+	ctl.Create(me)
+	me.Controls = append(me.Controls, ctl)
 }
 
 // 设置窗体名称
 func (me *Form) SetName(name string) {
 	me.name = name
 
-	var err error
-	if me.lpName, err = syscall.UTF16PtrFromString(me.name); err != nil {
-		panic(err)
-	}
+	me.lpName = syscall.StringToUTF16Ptr(me.name)
+}
+
+func (me *Form) GetHwnd() uintptr {
+	return me.hwnd
+}
+func (me *Form) GetHandle() uintptr {
+	return me.handle
 }
 
 // 回调函数
@@ -92,6 +117,10 @@ func wndProc(hWnd win.HWND, uMsg uint32, wParam, lParam uintptr) uintptr {
 	case user32.WM_DESTROY:
 		user32.DestroyWindow(fhwnd)
 		user32.PostQuitMessage(0)
+		user32.UnregisterClass(lpszClassName)
+
+		// case user32.WM_CREATE:
+		// 	user32.CreateWindowEx(0, syscall.StringToUTF16Ptr("BUTTON"), syscall.StringToUTF16Ptr("BUTTON"), user32.WS_CHILD|user32.WS_VISIBLE, 10, 10, 80, 20, hWnd, 0, handle, nil)
 
 	}
 	return user32.DefWindowProc(hWnd, uMsg, wParam, lParam)
