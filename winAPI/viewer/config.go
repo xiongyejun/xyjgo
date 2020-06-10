@@ -27,3 +27,16 @@ func VBAConfig() (ret *Config) {
 
 	return
 }
+
+// {
+//    "Lng": "VBA32",
+//    "FuncSql": "select \ncase Function.IsFunction\n\twhen 1 then 'Public Declare Function '\n\telse 'Public Declare Sub '\nend\n\n|| Function.Name || ' Lib \"' || Dll.Name || '.dll\"' || \n\t\t\t\ncase Function.Alias\n\twhen '' then ' '\n\telse ' Alias \"' || Function.Alias || '\" '\n\tend \n\n|| Function.FullName\nFrom Function,Dll where Function.DllID=Dll.ID",
+//    "ByVal": "ByVal",
+//    "ByRef": "ByRef",
+//    "B1": "As Byte",
+//    "B2": "As integer",
+//    "B4": "As Long",
+//    "StructSql": "select 'Type ' || Name || '\n' || FullName || '\nEnd Type' from Struct where ",
+//    "ConstSql": "select 'Const ' || Name || ' = ' || Value from Constant where ",
+//    "Hex": "\u0026H"
+//   }

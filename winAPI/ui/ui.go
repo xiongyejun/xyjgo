@@ -31,7 +31,7 @@ const (
 	COMBO_BOX
 	SCROLLBAR
 
-	CONTROL_COUNT
+	STD_CONTROL_COUNT
 )
 
 type Control struct {
@@ -40,11 +40,16 @@ type Control struct {
 	Style     uint32
 
 	Left, Top, Width, Height int32
+	Parent                   Controler
 	hwnd                     uintptr
+	id                       int
 }
 
 func (me *Control) Create(parent Container) {
-	me.hwnd = user32.CreateWindowEx(0, syscall.StringToUTF16Ptr(me.ClassName), syscall.StringToUTF16Ptr(me.Name), me.Style, me.Left, me.Top, me.Width, me.Height, parent.GetHwnd(), uintptr(len(parent.GetControls())+1), parent.GetHandle(), nil)
+	me.id = len(parent.GetControls()) + 1
+	me.Parent = parent
+
+	me.hwnd = user32.CreateWindowEx(0, syscall.StringToUTF16Ptr(me.ClassName), syscall.StringToUTF16Ptr(me.Name), me.Style, me.Left, me.Top, me.Width, me.Height, parent.GetHwnd(), uintptr(me.id), parent.GetHandle(), nil)
 	if me.hwnd == 0 {
 		panic("CreateWindowEx == 0")
 	}
@@ -55,11 +60,11 @@ func (me *Control) GetHwnd() uintptr {
 }
 
 // windows 标准控件
-var DefaultControl []*Control = make([]*Control, CONTROL_COUNT)
+var StdControl []*Control = make([]*Control, STD_CONTROL_COUNT)
 
 func init() {
-	DefaultControl[STATIC] = &Control{
-		Name:      "STATIC",
+	StdControl[STATIC] = &Control{
+		Name:      "Static",
 		ClassName: "STATIC",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE,
 		Left:      10,
@@ -68,8 +73,8 @@ func init() {
 		Height:    20,
 	}
 
-	DefaultControl[BUTTON] = &Control{
-		Name:      "BUTTON",
+	StdControl[BUTTON] = &Control{
+		Name:      "Button",
 		ClassName: "BUTTON",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE,
 		Left:      10,
@@ -78,8 +83,8 @@ func init() {
 		Height:    20,
 	}
 
-	DefaultControl[EDIT] = &Control{
-		ClassName: "EDIT",
+	StdControl[EDIT] = &Control{
+		ClassName: "Edit",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.WS_BORDER,
 		Left:      10,
 		Top:       10,
@@ -87,8 +92,8 @@ func init() {
 		Height:    20,
 	}
 
-	DefaultControl[GROUP_BOX] = &Control{
-		Name:      "GROUP BOX",
+	StdControl[GROUP_BOX] = &Control{
+		Name:      "GroupBox",
 		ClassName: "BUTTON",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.BS_GROUPBOX,
 		Left:      10,
@@ -97,8 +102,8 @@ func init() {
 		Height:    200,
 	}
 
-	DefaultControl[RADIO_BUTTON] = &Control{
-		Name:      "RADIO BUTTON",
+	StdControl[RADIO_BUTTON] = &Control{
+		Name:      "RadioButton",
 		ClassName: "BUTTON",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.BS_AUTORADIOBUTTON,
 		Left:      10,
@@ -107,8 +112,8 @@ func init() {
 		Height:    20,
 	}
 
-	DefaultControl[CHECK_BOX] = &Control{
-		Name:      "CHECK_BOX",
+	StdControl[CHECK_BOX] = &Control{
+		Name:      "CheckBox",
 		ClassName: "BUTTON",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.BS_AUTOCHECKBOX,
 		Left:      10,
@@ -117,8 +122,8 @@ func init() {
 		Height:    20,
 	}
 
-	DefaultControl[LIST_BOX] = &Control{
-		Name:      "LIST BOX",
+	StdControl[LIST_BOX] = &Control{
+		Name:      "ListBbox",
 		ClassName: "LISTBOX",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.LBS_STANDARD,
 		Left:      10,
@@ -127,7 +132,7 @@ func init() {
 		Height:    90,
 	}
 
-	DefaultControl[COMBO_BOX] = &Control{
+	StdControl[COMBO_BOX] = &Control{
 		ClassName: "COMBOBOX",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.WS_VSCROLL | user32.CBS_AUTOHSCROLL | user32.CBS_DROPDOWNLIST,
 		Left:      10,
@@ -136,7 +141,7 @@ func init() {
 		Height:    90,
 	}
 
-	DefaultControl[SCROLLBAR] = &Control{
+	StdControl[SCROLLBAR] = &Control{
 		ClassName: "SCROLLBAR",
 		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.SBS_HORZ,
 		Left:      10,

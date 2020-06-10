@@ -119,8 +119,8 @@ func wndProc(hWnd win.HWND, uMsg uint32, wParam, lParam uintptr) uintptr {
 		user32.PostQuitMessage(0)
 		user32.UnregisterClass(lpszClassName)
 
-		// case user32.WM_CREATE:
-		// 	user32.CreateWindowEx(0, syscall.StringToUTF16Ptr("BUTTON"), syscall.StringToUTF16Ptr("BUTTON"), user32.WS_CHILD|user32.WS_VISIBLE, 10, 10, 80, 20, hWnd, 0, handle, nil)
+	case user32.WM_COMMAND:
+		fmt.Println(wParam, wParam&0xffff)
 
 	}
 	return user32.DefWindowProc(hWnd, uMsg, wParam, lParam)

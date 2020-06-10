@@ -10,8 +10,8 @@ func main() {
 	f.Create(nil)
 
 	var top int32 = 5
-	for i := 0; i < ui.CONTROL_COUNT; i++ {
-		b := ui.DefaultControl[i]
+	for i := 0; i < ui.STD_CONTROL_COUNT; i++ {
+		b := ui.StdControl[i]
 		b.Top = top
 		f.AddControl(b)
 		top += b.Height
