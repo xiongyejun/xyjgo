@@ -198,6 +198,24 @@ const (
 )
 const CW_USEDEFAULT = ^0x7fffffff
 
+// Edit styles
+const (
+	ES_LEFT        = 0x0000
+	ES_CENTER      = 0x0001
+	ES_RIGHT       = 0x0002
+	ES_MULTILINE   = 0x0004
+	ES_UPPERCASE   = 0x0008
+	ES_LOWERCASE   = 0x0010
+	ES_PASSWORD    = 0x0020
+	ES_AUTOVSCROLL = 0x0040
+	ES_AUTOHSCROLL = 0x0080
+	ES_NOHIDESEL   = 0x0100
+	ES_OEMCONVERT  = 0x0400
+	ES_READONLY    = 0x0800
+	ES_WANTRETURN  = 0x1000
+	ES_NUMBER      = 0x2000
+)
+
 // ComboBox styles
 const (
 	CBS_SIMPLE            = 0x0001
@@ -563,11 +581,11 @@ func SendInput(nInputs uint32, pInputs unsafe.Pointer, cbSize int32) uint32 {
 //24位为扩展键，即某些右ALT和CTRL；29、30、31位按照说明设置即可
 //（第30位对于keydown在和shift等结合的时候通常要设置为1）。
 // RESULT SendMessage（HWND hWnd，UINT Msg，WPARAM wParam，LPARAM IParam）
-func SendMessage(hWnd uint32, Msg uint, wParam uintptr, IParam uintptr) uint32 {
+func SendMessage(hWnd win.HWND, Msg uint, wParam uintptr, IParam uintptr) uint32 {
 	ret, _, _ := syscall.Syscall6(sendMessage, 4,
-		uintptr(hWnd),
+		hWnd,
 		uintptr(Msg),
-		uintptr(wParam),
+		wParam,
 		uintptr(IParam),
 		0,
 		0)
@@ -690,7 +708,7 @@ func FindWindowEx(hwndParent, hwndChildAfter uint32, IpClassName string, IpWindo
 	return uint32(ret)
 }
 
-func GetWindowText(hwnd uint32) string {
+func GetWindowText(hwnd win.HWND) string {
 	iLen := GetWindowTextLength(hwnd) + 1
 	buf := make([]uint16, iLen)
 
@@ -705,8 +723,8 @@ func GetWindowText(hwnd uint32) string {
 
 }
 
-func GetWindowTextLength(hwnd uint32) uint32 {
-	ret, _, _ := syscall.Syscall(getWindowTextLength, 1, uintptr(hwnd), 0, 0)
+func GetWindowTextLength(hwnd win.HWND) uint32 {
+	ret, _, _ := syscall.Syscall(getWindowTextLength, 1, hwnd, 0, 0)
 	return uint32(ret)
 }
 

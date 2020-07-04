@@ -41,11 +41,8 @@ var handle win.HANDLE = kernel32.GetModuleHandle(nil)
 var lpszClassName *uint16 = syscall.StringToUTF16Ptr(CLASS_NAME)
 var fhwnd win.HWND
 
-func init() {
-	if err := registerWindowClass(); err != nil {
-		panic(err)
-	}
-}
+// 初始一个空函数
+var fClick func() = func() {}
 
 func New() (ret *Form) {
 	ret = new(Form)
@@ -54,14 +51,18 @@ func New() (ret *Form) {
 	ret.handle = handle
 	ret.Left = user32.CW_USEDEFAULT
 	ret.Top = user32.CW_USEDEFAULT
-	ret.Width = user32.CW_USEDEFAULT
-	ret.Height = user32.CW_USEDEFAULT
+	ret.Width = 300
+	ret.Height = 300
 
 	return
 }
 
 // 创建窗体
 func (me *Form) Create(parent ui.Container) {
+	if err := registerWindowClass(); err != nil {
+		panic(err)
+	}
+
 	me.hwnd = win.HWND(user32.CreateWindowEx(0, me.lpszClassName, me.lpName, user32.WS_OVERLAPPEDWINDOW, me.Left, me.Top, me.Width, me.Height, 0, 0, me.handle, nil))
 	if me.hwnd == 0 {
 		panic("CreateWindowEx == 0")
@@ -103,12 +104,18 @@ func (me *Form) SetName(name string) {
 
 	me.lpName = syscall.StringToUTF16Ptr(me.name)
 }
+func (me *Form) GetName() string {
+	return me.name
+}
 
 func (me *Form) GetHwnd() uintptr {
 	return me.hwnd
 }
 func (me *Form) GetHandle() uintptr {
 	return me.handle
+}
+func (me *Form) AddClickFunc(f func()) {
+	fClick = f
 }
 
 // 回调函数
@@ -120,8 +127,10 @@ func wndProc(hWnd win.HWND, uMsg uint32, wParam, lParam uintptr) uintptr {
 		user32.UnregisterClass(lpszClassName)
 
 	case user32.WM_COMMAND:
-		fmt.Println(wParam, wParam&0xffff)
+	// fmt.Println(wParam, wParam&0xffff)
 
+	case user32.WM_LBUTTONDOWN:
+		fClick()
 	}
 	return user32.DefWindowProc(hWnd, uMsg, wParam, lParam)
 }

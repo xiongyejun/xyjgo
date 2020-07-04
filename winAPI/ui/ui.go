@@ -3,10 +3,9 @@ package ui
 import (
 	"syscall"
 
+	// "github.com/lxn/win"
 	"github.com/xiongyejun/xyjgo/winAPI/user32"
 )
-
-// "github.com/lxn/win"
 
 type Container interface {
 	GetControls() []Controler
@@ -18,6 +17,7 @@ type Container interface {
 type Controler interface {
 	Create(Container)
 	GetHwnd() uintptr
+	GetName() string
 }
 
 const (
@@ -59,6 +59,14 @@ func (me *Control) GetHwnd() uintptr {
 	return me.hwnd
 }
 
+// 设置名称
+func (me *Control) SetName(name string) {
+	me.Name = name
+}
+func (me *Control) GetName() string {
+	return me.Name
+}
+
 // windows 标准控件
 var StdControl []*Control = make([]*Control, STD_CONTROL_COUNT)
 
@@ -85,7 +93,7 @@ func init() {
 
 	StdControl[EDIT] = &Control{
 		ClassName: "Edit",
-		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.WS_BORDER,
+		Style:     user32.WS_CHILD | user32.WS_VISIBLE | user32.WS_BORDER | user32.ES_AUTOHSCROLL | user32.ES_AUTOVSCROLL,
 		Left:      10,
 		Top:       10,
 		Width:     80,
