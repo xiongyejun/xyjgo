@@ -121,7 +121,7 @@ func FromUTF8(bUTF8 []byte) (ret []byte, err error) {
 			}
 
 			x1 = (b1 << 3) >> 5
-			x2 = (b1 & b_0000_0111) | (b2 & b_0011_1111)
+			x2 = ((b1 & b_0000_0011) << 6) | (b2 & b_0011_1111)
 		} else {
 			// 0aaa aaaa ==> 0000 0000  0aaa aaaa
 			x1 = 0

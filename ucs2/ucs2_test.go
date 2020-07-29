@@ -5,31 +5,27 @@ import (
 	"testing"
 )
 
-func Test_func(t *testing.T) {
-	//	var str string = "ucs2T0utf8测试一下吧"
+func Test_func1(t *testing.T) {
+	b, _ := ioutil.ReadFile("utf8.txt")
 
-	//	if b, err := FromUTF8([]byte(str)); err != nil {
-	//		t.Log(err)
-	//	} else {
-	//		if err := ioutil.WriteFile("ucs2.txt", b, 0666); err != nil {
-	//			t.Log(err)
-	//		}
-	//	}
-
-	if err := testfunc2(); err != nil {
+	if b, err := FromUTF8(b); err != nil {
 		t.Log(err)
-	}
-}
-
-func testfunc2() error {
-	if b, err := ioutil.ReadFile("ucs2.txt"); err != nil {
-		return err
 	} else {
-		if buf8, err := ToUTF8(b); err != nil {
-			return err
-		} else {
-			print(string(buf8))
+		if err := ioutil.WriteFile("ucs2.txt", b, 0666); err != nil {
+			t.Log(err)
 		}
 	}
-	return nil
+
 }
+
+// func Test_func2(t *testing.T) {
+// 	if b, err := ioutil.ReadFile("ucs2.txt"); err != nil {
+// 		t.Log(err)
+// 	} else {
+// 		if buf8, err := ToUTF8(b); err != nil {
+// 			t.Log(err)
+// 		} else {
+// 			t.Logf("%s\n", buf8)
+// 		}
+// 	}
+// }
