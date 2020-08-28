@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/lxn/walk"
 	"github.com/lxn/walk/declarative"
@@ -9,7 +10,23 @@ import (
 )
 
 func main() {
-	uiInit()
+	if len(os.Args) == 1 {
+		uiInit()
+	} else if len(os.Args) == 3 {
+		if str, err := decode(os.Args[2]); err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(str)
+		}
+	} else {
+		printHelp()
+	}
+}
+
+func printHelp() {
+	fmt.Println(`
+ qrcode d <picpath> -- decode qrcode	
+	`)
 }
 
 type uiControl struct {
