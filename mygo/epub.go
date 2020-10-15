@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/axgle/mahonia"
+
 	epub "github.com/bmaupin/go-epub"
 )
 
@@ -52,6 +54,13 @@ func (me *EpubSet) addSection(fi *FileInfo, iLevel int) (err error) {
 				if b, err = ioutil.ReadFile(fi.Subs[i].Path + fi.Subs[i].Name); err != nil {
 					panic(err)
 				}
+
+				if strings.ToLower(me.CharSet) == "gbk" {
+					decoder := mahonia.NewDecoder("gbk")
+
+					b = []byte(decoder.ConvertString(string(b)))
+				}
+
 				// 只需要提取小说内容
 				var str string = string(b)
 				if me.DivID != "" {

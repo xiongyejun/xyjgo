@@ -119,7 +119,8 @@ type EpubSet struct {
 	CoverPicFile  string // 封面图片的路径
 	SrcFolderPath string // 每一个章节的原始网页保存路径
 
-	DivID string // 按DivID提取内容，如果为空，则应该按照SplitSep符号来分割
+	DivID   string // 按DivID提取内容，如果为空，则应该按照SplitSep符号来分割
+	CharSet string
 
 	SplitInfos  []SplitInfo
 	ReplaceExpr []ReplaceInfo // 有些广告需要替换的正则表达式
@@ -184,7 +185,8 @@ func xsTemplateSet() {
 		CoverPicFile:  "封面图片的路径",
 		SrcFolderPath: "每一个章节的原始网页保存路径",
 
-		DivID: `按DivID提取内容，如果为空，则应该按照SplitSep符号来分割 <div id=\"book_text\">`,
+		DivID:   `按DivID提取内容，如果为空，则应该按照SplitSep符号来分割 <div id=\"book_text\">`,
+		CharSet: "UTF-8",
 
 		SplitInfos: []SplitInfo{
 			SplitInfo{
