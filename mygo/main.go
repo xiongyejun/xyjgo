@@ -78,6 +78,7 @@ func fDirSet() {
 type DownSet struct {
 	DirInfoJsonFile string // dirJson.txt路径
 	PreHerf         string // dirJson.txt里记录的herf需要的前缀路径
+	SleepSecond     uint32
 }
 
 // 读取dirJson.txt信息，下载每一个章节的原始网页
@@ -167,7 +168,7 @@ func xsTemplateSet() {
 		return
 	}
 
-	downs := DownSet{`C:\dirJson.txt //dirJson.txt路径`, `https://www.url/ //dirJson.txt里记录的herf需要的前缀路径`}
+	downs := DownSet{`C:\dirJson.txt //dirJson.txt路径`, `https://www.url/ //dirJson.txt里记录的herf需要的前缀路径`, 0}
 	if b, err = json.MarshalIndent(&downs, "", "\t"); err != nil {
 		fmt.Println(err)
 		return

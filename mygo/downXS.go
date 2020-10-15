@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 var ch chan int
@@ -24,25 +26,38 @@ func (me *DownSet) down() (err error) {
 	if err = json.Unmarshal(b, &di); err != nil {
 		return
 	}
-	di.down()
+	ch = make(chan int, 50)
 
-	for i := range di.DirInfos {
-		<-ch
-		i++
+	if me.SleepSecond > 0 {
+		var dtime time.Duration = time.Duration(rand.Intn(int(me.SleepSecond)))
+		rand.Seed(time.Now().UnixNano()) // UnixNano()表示纳秒
+		// fmt.Printf("开始下载，总共%d个。\n", len(me.DirInfos))
+		for i := range di.DirInfos {
+			di.DirInfos[i].down(i)
+			<-ch
+			time.Sleep(dtime * time.Second)
+		}
+
+	} else {
+		di.down()
+		for i := range di.DirInfos {
+			<-ch
+			i++
+		}
 	}
+
 	return
 }
 
 //  下载小说
 func (me *dirInfos) down() {
-	ch = make(chan int, 50)
-
 	fmt.Printf("开始下载，总共%d个。\n", len(me.DirInfos))
 	for i := range me.DirInfos {
 		// if i == 2 {
 		// 	return
 		// }
-		go me.DirInfos[i].down(i)
+		me.DirInfos[i].down(i)
+
 	}
 
 	return
@@ -66,7 +81,7 @@ func (me *DirInfo) down(j int) {
 	if exists(filename) {
 		return
 	}
-	fmt.Printf("开始下载：%d, %s, %s,  %s\n", j, herf+me.Href, me.Name, filename)
+	// fmt.Printf("开始下载：%d, %s, %s,  %s\n", j, herf+me.Href, me.Name, filename)
 
 	// 尝试20次下载
 	for count < 20 {
