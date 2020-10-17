@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"regexp"
 	"strconv"
 	"time"
@@ -29,13 +28,12 @@ func (me *DownSet) down() (err error) {
 	ch = make(chan int, 50)
 
 	if me.SleepSecond > 0 {
-		var dtime time.Duration = time.Duration(rand.Intn(int(me.SleepSecond)))
-		rand.Seed(time.Now().UnixNano()) // UnixNano()表示纳秒
+		var dtime time.Duration = time.Duration(int(me.SleepSecond)) * time.Second
 		// fmt.Printf("开始下载，总共%d个。\n", len(me.DirInfos))
 		for i := range di.DirInfos {
 			di.DirInfos[i].down(i)
 			<-ch
-			time.Sleep(dtime * time.Second)
+			time.Sleep(dtime)
 		}
 
 	} else {
@@ -56,7 +54,7 @@ func (me *dirInfos) down() {
 		// if i == 2 {
 		// 	return
 		// }
-		me.DirInfos[i].down(i)
+		go me.DirInfos[i].down(i)
 
 	}
 
