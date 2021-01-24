@@ -73,6 +73,10 @@ func main() {
 							fmt.Printf("%d 模块输出成功：%s\r\n", i, of.vp.Module[i].Name)
 						}
 					}
+					// TODO 读取customUI
+					if err := ioutil.WriteFile(path+"customUI.xml", of.iof.customUI(), 0666); err != nil {
+						fmt.Println(err)
+					}
 
 					return
 				}

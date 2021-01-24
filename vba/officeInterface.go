@@ -14,6 +14,8 @@ import (
 type iOffice interface {
 	readFile(fileName string) (b []byte, err error)
 	reWriteFile(oldFileName string, saveFileName string, newByte []byte) error
+
+	customUI() []byte
 }
 
 var of *officeFile
@@ -40,6 +42,15 @@ func (me *file03) reWriteFile(oldFileName string, saveFileName string, newByte [
 
 type file07 struct {
 	vbaProjectIndex int
+
+	bCustomUI []byte
+}
+
+func (me *file03) customUI() []byte {
+	return []byte("03版本没有customUI")
+}
+func (me *file07) customUI() []byte {
+	return me.bCustomUI
 }
 
 func (me *file07) readFile(fileName string) (b []byte, err error) {
@@ -49,20 +60,33 @@ func (me *file07) readFile(fileName string) (b []byte, err error) {
 	}
 	defer reader.Close()
 
+	var ok bool = false
+
+	var tmp []byte
 	for i, f := range reader.File {
-		if f.Name == "xl/vbaProject.bin" {
+		if f.Name == "xl/vbaProject.bin" || f.Name == "customUI/customUI.xml" {
 			var rc io.ReadCloser
 			if rc, err = f.Open(); err != nil {
 				return
 			}
 
 			me.vbaProjectIndex = i
-			if b, err = ioutil.ReadAll(rc); err != nil {
+			if tmp, err = ioutil.ReadAll(rc); err != nil {
 				return
 			}
 
-			return
 		}
+		if f.Name == "xl/vbaProject.bin" {
+			ok = true
+			b = tmp
+		}
+		if f.Name == "customUI/customUI.xml" {
+			me.bCustomUI = tmp
+		}
+	}
+
+	if ok {
+		return
 	}
 	return nil, errors.New("err: 没有找到 vbaProject.bin")
 }
