@@ -35,6 +35,17 @@ func main() {
 		}
 		fmt.Println("images to pdf OK.")
 
+	case "if":
+		// if <outputPath> <files...> -- image files to pdf 图片创建pdf
+		if len(os.Args) < 3 {
+			printHelp()
+		}
+		if err = imageFilesToPdf(os.Args[2], os.Args[3:]); err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("images to pdf OK.")
+
 	case "s":
 		// s <inputPath> <outputPath> <pages> -- 拆分pdf
 		if len(os.Args) != 5 {
@@ -130,7 +141,8 @@ func getPages(pages string) (page []int, err error) {
 
 func printHelp() {
 	fmt.Println(`
- i <imagesFolder> <outputPath> -- images to pdf 图片创建pdf
+ i <imagesFolder> <outputPath> -- images to pdf 图片文件夹创建pdf
+ if <outputPath> <files...> -- image files to pdf 图片创建pdf
  s <inputPath> <outputPath> <pages> -- 拆分pdf
  c <inputPath> <outputPath> -- Compress and optimize PDF 压缩pdf
  e <inputPath> <outputPath> -- Extract images 提取图片

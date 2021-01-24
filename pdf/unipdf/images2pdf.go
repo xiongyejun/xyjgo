@@ -47,3 +47,32 @@ func imagesToPdf(imagesFolder, outputPath string) (err error) {
 
 	return c.WriteToFile(outputPath)
 }
+
+func imageFilesToPdf(outputPath string, files []string) (err error) {
+	c := creator.New()
+	for i := range files {
+		if filepath.Ext(files[i]) != ".jpg" && filepath.Ext(files[i]) != ".png" {
+			continue
+		}
+
+		fmt.Printf("Image: %s\n", files[i])
+
+		var img *creator.Image
+		if img, err = c.NewImageFromFile(files[i]); err != nil {
+			return
+		}
+		img.ScaleToWidth(612.0)
+
+		// Use page width of 612 points, and calculate the height proportionally based on the image.
+		// Standard PPI is 72 points per inch, thus a width of 8.5"
+		height := 612.0 * img.Height() / img.Width()
+		c.SetPageSize(creator.PageSize{612, height})
+		c.NewPage()
+		img.SetPos(0, 0)
+		if err = c.Draw(img); err != nil {
+			return
+		}
+	}
+
+	return c.WriteToFile(outputPath)
+}
