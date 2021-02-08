@@ -12,6 +12,7 @@ import (
 
 	"github.com/lxn/walk"
 	"github.com/lxn/walk/declarative"
+	"github.com/xiongyejun/xyjgo/oleXML"
 )
 
 func fileMenu() declarative.Menu {
@@ -81,6 +82,20 @@ func fileMenu() declarative.Menu {
 }
 
 func saveXmlToFile() (newFile string, err error) {
+	// 验证
+	x := oleXML.New()
+
+	if err = x.InitXML(); err != nil {
+		return
+	}
+	defer x.UnInit()
+
+	err = x.Validate([]byte(ct.tbXml.Text()), `E:\04-github\08-go\src\github.com\xiongyejun\xyjgo\ribbon\CustomUI.xsd`, `http://schemas.microsoft.com/office/2006/01/customui`)
+
+	if err != nil {
+		return
+	}
+
 	var zipReader *zip.ReadCloser
 	var wr io.Writer
 
