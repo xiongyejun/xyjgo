@@ -37,7 +37,8 @@ func (me *google) Translate(value string) (ret string, err error) {
 		return
 	}
 
-	b = bytes.Split(b, []byte(`<div dir="ltr" class="t0">`))[1] // <div dir="ltr" class="t0">你好吗</div>
+	// <input type="text" aria-label="Source text" name="q" class="input-field" maxlength="2048" value="密码"><div class="translate-button-container"><input type="submit" value="Translate" class="translate-button"></div></form></div><div class="result-container">password</div>
+	b = bytes.Split(b, []byte(`<div class="result-container">`))[1] // <div dir="ltr" class="t0">你好吗</div>
 	b = bytes.Split(b, []byte(`</div>`))[0]
 	if b, err = gbkToUtf8(b); err != nil {
 		return
