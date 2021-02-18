@@ -46,6 +46,7 @@ var (
 	translateMessage         uintptr
 	dispatchMessage          uintptr
 	setParent                uintptr
+	enumChildWindows         uintptr
 )
 
 //Private Declare Function mciSendStringA Lib "winmm.dll" _
@@ -93,6 +94,7 @@ func init() {
 	createWindowEx = win.MustGetProcAddress(lib, "CreateWindowExW")
 	postQuitMessage = win.MustGetProcAddress(lib, "PostQuitMessage")
 	setParent = win.MustGetProcAddress(lib, "SetParent")
+	enumChildWindows = win.MustGetProcAddress(lib, "EnumChildWindows")
 }
 
 // Predefined icon constants
@@ -725,6 +727,11 @@ func GetWindowText(hwnd win.HWND) string {
 
 func GetWindowTextLength(hwnd win.HWND) uint32 {
 	ret, _, _ := syscall.Syscall(getWindowTextLength, 1, hwnd, 0, 0)
+	return uint32(ret)
+}
+
+func EnumChildWindows(parentHwnd win.HWND, enumProc func(hwnd win.HWND, lParam int) int) uint32 {
+	ret, _, _ := syscall.Syscall(enumChildWindows, 3, parentHwnd, syscall.NewCallback(enumProc), 0)
 	return uint32(ret)
 }
 

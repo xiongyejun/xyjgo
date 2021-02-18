@@ -1,20 +1,21 @@
 package user32
 
 import (
+	"fmt"
 	"testing"
-	"time"
+
+	"github.com/xiongyejun/xyjgo/winAPI/win"
 )
 
 func Test_func(t *testing.T) {
 	defer Free()
 
-	var i int = 0
-	for i < 10 {
-		time.Sleep(2 * time.Second)
-		hwnd := GetActiveWindow()
-		t.Log(hwnd)
-		t.Log(GetWindowText(hwnd))
-		i++
-	}
+	EnumChildWindows(1049218, enumProc)
 
+}
+
+func enumProc(hwnd win.HWND, lParam int) int {
+	fmt.Printf("%d  %s\n", hwnd, GetWindowText(hwnd))
+
+	return 1
 }
