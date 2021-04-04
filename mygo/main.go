@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	epub "github.com/bmaupin/go-epub"
@@ -37,6 +38,18 @@ func main() {
 			fmt.Println(err)
 		}
 		fmt.Println("download ok")
+
+	case "lp":
+		if len(os.Args) != 3 {
+			printHelp()
+			return
+		}
+		if spath, err := exec.LookPath(os.Args[2]); err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(spath)
+		}
+
 	default:
 		fmt.Println("未设置的命令。")
 		printHelp()
@@ -225,5 +238,6 @@ func printHelp() {
  mygo xsepub--创建epub，使用前先把<epub.set>的信息设置好，如果有folder里有子folder，则构建多层次目录
  mygo xsset--输出set的模板格式
  mygo dl <url> <savename>--download 下载资源
+ mygo lp <exe> --LookPath 查找程序的路径
 	`)
 }
