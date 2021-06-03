@@ -100,7 +100,7 @@ func (me *DirInfo) down(j int) {
 		me.PrintErr(err)
 		return
 	}
-	fmt.Printf("完成下载：%d, %s\n", j, herf+me.Href)
+	// fmt.Printf("完成下载：%d, %s\n", j, herf+me.Href)
 
 	return
 }

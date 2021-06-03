@@ -22,7 +22,7 @@ func imagesToPdf(imagesFolder, outputPath string) (err error) {
 		}
 
 		imgPath := entrys[i].Name()
-		if filepath.Ext(imgPath) != ".jpg" && filepath.Ext(imgPath) != ".png" {
+		if filepath.Ext(imgPath) != ".jpg" && filepath.Ext(imgPath) != ".png" && filepath.Ext(imgPath) != ".jpeg" {
 			continue
 		}
 
@@ -51,7 +51,7 @@ func imagesToPdf(imagesFolder, outputPath string) (err error) {
 func imageFilesToPdf(outputPath string, files []string) (err error) {
 	c := creator.New()
 	for i := range files {
-		if filepath.Ext(files[i]) != ".jpg" && filepath.Ext(files[i]) != ".png" {
+		if filepath.Ext(files[i]) != ".jpg" && filepath.Ext(files[i]) != ".png" && filepath.Ext(files[i]) != ".jpeg" {
 			continue
 		}
 

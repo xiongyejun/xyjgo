@@ -49,7 +49,15 @@ func main() {
 		} else {
 			fmt.Println(spath)
 		}
+	case "wj":
+		if len(os.Args) != 3 {
+			printHelp()
+			return
+		}
 
+		if err := webp2jpgDir(os.Args[2]); err != nil {
+			fmt.Println(err)
+		}
 	default:
 		fmt.Println("未设置的命令。")
 		printHelp()
@@ -239,5 +247,6 @@ func printHelp() {
  mygo xsset--输出set的模板格式
  mygo dl <url> <savename>--download 下载资源
  mygo lp <exe> --LookPath 查找程序的路径
+ mygo wj <folder> --webp2jpg
 	`)
 }
