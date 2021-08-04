@@ -98,3 +98,8 @@ func GetPsw(ssid string) (psw string, err error) {
 
 	return "", errors.New("password: Not found")
 }
+
+//  返回二维码需要的字符串
+func QRCodeFormat(account, psd string) (ret string) {
+	return "WIFI:T:WPA;S:" + account + ";P:" + psd + ";;"
+}
